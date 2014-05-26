@@ -24,15 +24,15 @@ public class point extends B4AClass.ImplB4AClass implements BA.SubDelegator{
     }
 
  public anywheresoftware.b4a.keywords.Common __c = null;
-public int _pos1 = 0;
-public int _pos2 = 0;
-public pineysoft.squarepaddocks.main _main = null;
+public int _vv2 = 0;
+public int _vv3 = 0;
+public pineysoft.squarepaddocks.main _vv4 = null;
 public String  _class_globals() throws Exception{
  //BA.debugLineNum = 2;BA.debugLine="Sub Class_Globals";
  //BA.debugLineNum = 3;BA.debugLine="Dim Pos1 As Int";
-_pos1 = 0;
+_vv2 = 0;
  //BA.debugLineNum = 4;BA.debugLine="Dim Pos2 As Int";
-_pos2 = 0;
+_vv3 = 0;
  //BA.debugLineNum = 5;BA.debugLine="End Sub";
 return "";
 }
@@ -40,9 +40,9 @@ public String  _initialize(anywheresoftware.b4a.BA _ba,int _a,int _b) throws Exc
 innerInitialize(_ba);
  //BA.debugLineNum = 8;BA.debugLine="Public Sub Initialize(a As Int, b As Int)";
  //BA.debugLineNum = 9;BA.debugLine="Pos1 = a";
-_pos1 = _a;
+_vv2 = _a;
  //BA.debugLineNum = 10;BA.debugLine="Pos2 = b";
-_pos2 = _b;
+_vv3 = _b;
  //BA.debugLineNum = 11;BA.debugLine="End Sub";
 return "";
 }

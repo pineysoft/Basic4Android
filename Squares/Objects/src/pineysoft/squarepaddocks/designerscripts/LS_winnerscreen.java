@@ -25,10 +25,10 @@ views.get("lblwinner").vw.setTop((int)((views.get("imageicon").vw.getTop() + vie
 views.get("lblwinner").vw.setLeft((int)((views.get("pnldisplay").vw.getWidth())/2d - (views.get("lblwinner").vw.getWidth() / 2)));
 views.get("lblscores").vw.setTop((int)((views.get("lblwinner").vw.getTop() + views.get("lblwinner").vw.getHeight())+(5d * scale)));
 views.get("lblscores").vw.setLeft((int)((views.get("pnldisplay").vw.getWidth())/2d - (views.get("lblscores").vw.getWidth() / 2)));
-views.get("btnok").vw.setWidth((int)((50d / 100 * width)));
-views.get("btnok").vw.setHeight((int)((40d * scale)));
-views.get("btnok").vw.setTop((int)((views.get("lblscores").vw.getTop() + views.get("lblscores").vw.getHeight())+(10d * scale)));
 views.get("btnok").vw.setLeft((int)((views.get("pnldisplay").vw.getWidth())/2d - (views.get("btnok").vw.getWidth() / 2)));
+views.get("btnok").vw.setWidth((int)((60d * scale)));
+views.get("btnok").vw.setHeight((int)((60d * scale)));
+views.get("btnok").vw.setTop((int)((views.get("pnldisplay").vw.getTop() + views.get("pnldisplay").vw.getHeight())-((views.get("btnok").vw.getHeight())+(10d * scale)) - (views.get("btnok").vw.getHeight())));
 
 }
 }
