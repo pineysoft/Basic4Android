@@ -1,0 +1,21 @@
+
+handle.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+hdlhoriz
+  rotate: false
+  xy: 0, 126
+  size: 126, 2
+  split: 0, 0, 0, 0
+  orig: 126, 2
+  offset: 0, 0
+  index: -1
+hdlvert
+  rotate: false
+  xy: 0, 0
+  size: 2, 126
+  split: 0, 0, 0, 0
+  orig: 2, 126
+  offset: 0, 0
+  index: -1

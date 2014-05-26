@@ -1,0 +1,33 @@
+
+atlas.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+badlogicslice
+  rotate: true
+  xy: 1, 81
+  size: 128, 256
+  orig: 128, 256
+  offset: 0, 0
+  index: -1
+font
+  rotate: false
+  xy: 259, 156
+  size: 252, 53
+  orig: 256, 256
+  offset: 0, 203
+  index: -1
+b4a_logo
+  rotate: false
+  xy: 1, 1
+  size: 132, 78
+  orig: 256, 256
+  offset: 58, 87
+  index: -1
+particle-star
+  rotate: false
+  xy: 259, 90
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1

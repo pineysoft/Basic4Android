@@ -1,0 +1,56 @@
+﻿Version=3.5
+IconFile=
+NumberOfModules=1
+Module1=WallpaperService
+ModuleVisible1=1
+Package=b4a.SSLiveWallPaper
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" />~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~AddApplicationText(~\n~<!-- ******** Add the internal service declaration - you can change android:label  ******* -->~\n~<service~\n~        android:label="SStars Live Wallpaper"~\n~        android:name="anywheresoftware.b4a.objects.WallpaperInternalService"~\n~        android:permission="android.permission.BIND_WALLPAPER">~\n~        <intent-filter>~\n~            <action android:name="android.service.wallpaper.WallpaperService" />~\n~        </intent-filter>~\n~        <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper" />~\n~</service>~\n~)
+UserTypesHint=
+NumberOfFiles=2
+File1=DrawboardLandscape_Complete.png
+File2=DrawboardPortrait_Complete.png
+NumberOfLibraries=2
+Library1=core
+Library2=livewallpaper
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: SStars Live Wallpaper
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	'These variables can only be accessed from this module.
+
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	ToastMessageShow("Please go to the home screen and add the Live Wallpaper.", True)
+	Activity.Finish
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+

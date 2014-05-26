@@ -1,0 +1,241 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Buttons
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Atlas(2) As lgTextureAtlas
+	Dim Stage As lgScn2DStage
+	Dim Table As lgScn2DTable
+	Dim Font As lgBitmapFont
+	Dim ButtonGroup As lgScn2DButtonGroup
+	Dim Buttons(3) As lgScn2DButton
+	Dim TextButtons(3) As lgScn2DTextButton
+	Dim AnimImg As lgScn2DActor
+	Dim Animation As lgAnimation
+	Dim CheckImg As lgScn2DImage
+	Dim CheckTRD(2) As lgScn2DTextureRegionDrawable
+	Dim LabelWidget As lgScn2DLabel
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the two atlas
+	Atlas(0).InitializeWithFile("atlas/uiskin.pack")
+	Atlas(1).InitializeWithFile("atlas/buttons.pack")
+
+	'Gets the background image from the atlas
+	Dim TiledBkgd As lgScn2DTiledDrawable
+	TiledBkgd.Initialize3(Atlas(1).CreateRegionDrawable("background"))
+
+	'Creates the table
+	Table.Initialize("")
+	Table.Background = TiledBkgd
+	Table.FillParent = True
+	Table.Defaults.Pad(3dip)
+	Stage.AddActor(Table)
+
+	'Gets the Up and Down drawables of buttons
+	Dim npBtnUp As lgScn2DNinePatchDrawable
+	npBtnUp.Initialize2(Atlas(0).Create9Patch("default-round"))
+	Dim npBtnDown As lgScn2DNinePatchDrawable
+	npBtnDown.Initialize2(Atlas(0).Create9Patch("default-round-down"))
+
+	'Creates the style of buttons
+	Dim stylButton As lgScn2DButtonStyle
+	stylButton.Initialize(npBtnUp, npBtnDown)
+	stylButton.SetDrawableSize(150dip, 100dip)
+
+	'Creates a transparent style
+	Dim stylTransparentBtn As lgScn2DButtonStyle
+	stylTransparentBtn.Initialize(Null, Null)
+
+	'Gets the font from the atlas
+	Dim AtlasRegion As lgTextureAtlasRegion = Atlas(0).FindRegion("arial22")
+	Font.Initialize4(lGdx.Files.internal("font/arial22.fnt"), AtlasRegion)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.1)
+
+	'Creates the style of text buttons
+	Dim stylTextButton As lgScn2DTextButtonStyle
+	stylTextButton.Initialize(npBtnUp, npBtnDown, Font)
+	stylTextButton.SetDrawableSize(150dip, 100dip)
+	stylTextButton.FontColor = Font.Color.WHITE
+	stylTextButton.CheckedFontColor = Font.Color.YELLOW
+	stylTextButton.DisabledFontColor = Font.Color.GRAY
+	stylTextButton.DownFontColor = Font.Color.ORANGE
+
+	'Gets the smiley image from the atlas
+	Dim Smiley(3) As lgScn2DImage
+	For i = 0 To 2
+		Smiley(i).InitializeWithDrawable(Atlas(1).CreateRegionDrawable("smiley"), "")
+		Smiley(i).Scaling = Smiley(i).SCALING_Fit
+		If i < 2 Then Smiley(i).Visible = False
+	Next
+
+	'Creates an animation with the alien frames
+	Animation.Initialize(0.2, Atlas(1).FindRegions2("alien"))
+	AnimImg.Initialize("AnimImg")
+	AnimImg.Width = Min(92dip, Animation.GetKeyFrame(0).RegionWidth)
+	AnimImg.Height = Min(92dip, Animation.GetKeyFrame(0).RegionHeight)
+	AnimImg.Tag = 0 'State time
+
+	'Gets the checked and unchecked drawables from the atlas
+	CheckTRD(0) = Atlas(0).CreateRegionDrawable("check-off")
+	CheckTRD(1) = Atlas(0).CreateRegionDrawable("check-on")
+	For i = 0 To 1
+		CheckTRD(i).MinHeight = 22dip
+		CheckTRD(i).MinWidth = 22dip
+	Next
+	CheckImg.Initialize("CheckImg")
+
+	'Adds the buttons to the table
+	For i = 0 To 2
+		Buttons(i).Initialize(stylButton, "Btn")
+		Buttons(i).Name = "Btn" & i
+		Table.AddActor(Buttons(i))
+		TextButtons(i).Initialize("Button #" & i, stylTextButton, "TxtBtn")
+		TextButtons(i).Name = "TxtBtn" & i
+		Table.AddActor(TextButtons(i))
+		Table.NewRow
+	Next
+	Buttons(0).AddActor(AnimImg)
+	Buttons(1).AddLabel2("Ok", Font, Font.Color.YELLOW)
+	Buttons(1).AddActor(Smiley(2)).PadLeft = 7dip
+	Buttons(2).Style = stylTransparentBtn
+	Buttons(2).AddActor(CheckImg)
+	Buttons(2).AddLabel2("Check me", Font, Font.Color.White).PadLeft = 7dip
+	TextButtons(0).AddActor(Smiley(0)).PadBottom = 8dip
+	TextButtons(1).AddActor(Smiley(1)).PadBottom = 8dip
+	TextButtons(1).Toggle
+	TextButtons(2).Text = "Disabled"
+	TextButtons(2).Disabled = True
+
+	'Gets the label widget of the second button
+	LabelWidget = Buttons(1).GetCell2(0).Widget
+
+	'Creates a button group with the TextButtons
+	ButtonGroup.Initialize(TextButtons)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the buttons
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Atlas(0).dispose
+	Atlas(1).dispose
+End Sub
+
+Sub Btn_Click(CheckedState As Boolean)
+	Dim Btn As lgScn2DButton = Sender
+	Log(Btn.Name & " CheckedState=" & CheckedState)
+
+	If Btn = Buttons(1) Then
+		'Sets whether the first cell has a label widget
+		If Buttons(1).GetCell2(0).HasWidget Then
+			Buttons(1).GetCell2(0).Widget = Null
+		Else
+			Buttons(1).GetCell2(0).Widget = LabelWidget
+		End If
+	End If
+End Sub
+
+Sub TxtBtn_Click(CheckedState As Boolean)
+	Dim Btn As lgScn2DTextButton = Sender
+	Log(Btn.Name & " CheckedState=" & CheckedState)
+
+	'Sets whether the smiley image is visible
+	Dim Image As lgScn2DImage = Btn.GetCell2(1).Widget
+	Image.Visible = Btn.Checked
+End Sub
+
+Sub AnimImg_Draw(SpriteBatch As lgSpriteBatch, ParentAlpha As Float)
+	'Animates the alien when the checked state of the button is True
+	Dim Actor As lgScn2DActor = Sender
+	Dim Frame As lgTextureRegion
+	If Buttons(0).Checked Then
+		'Dynamic
+		Frame = Animation.GetKeyFrame2(Actor.Tag, True)
+		Actor.Tag = Actor.Tag + lGdx.Graphics.DeltaTime 'State time
+	Else
+		'Static
+		Frame = Animation.GetKeyFrame(0)
+		Actor.Tag = 0
+	End If
+	SpriteBatch.DrawRegion3(Frame, Actor.X, Actor.Y, Actor.OriginX, Actor.OriginY, Actor.Width, Actor.Height, Actor.ScaleX, Actor.ScaleY, Actor.Rotation)
+End Sub
+
+Sub CheckImg_Act(Delta As Float)
+	'Selects the appropriate drawable for the checked state
+	If Buttons(2).Checked Then
+		If CheckImg.Drawable = Null OR CheckImg.Drawable <> CheckTRD(1) Then
+			CheckImg.Drawable = CheckTRD(1)
+		End If
+	Else
+		If CheckImg.Drawable = Null OR CheckImg.Drawable <> CheckTRD(0) Then
+			CheckImg.Drawable = CheckTRD(0)
+		End If
+	End If
+End Sub

@@ -1,0 +1,117 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: Isometric map
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim TiledMap As lgMapTiledMap
+	Dim Renderer As lgMapIsometricTiledMapRenderer
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Loads the isometric map (TMX format)
+	Dim TMXLoader As lgMapTmxMapLoader
+	TiledMap = TMXLoader.Initialize2("maps/tmx/isometric/isometric_grass_and_water.tmx")
+
+	'Logs some information about this map
+	Log("--------")
+	Log("Map properties:")
+	Dim lstProperties As List = TiledMap.Properties.GetAllKeys
+	For i = 0 To lstProperties.Size - 1
+		Dim obj As Object = TiledMap.Properties.Get(lstProperties.Get(i))
+		Log("- " & lstProperties.Get(i) & "=" & obj)
+	Next
+	Log("- nb. of layers=" & TiledMap.Layers.Count)
+	Dim lstTilesets As List = TiledMap.TileSets.GetAllTilesets
+	Log("- nb. of tilesets=" & lstTilesets.Size)
+	Log("--------")
+	Log("Layer properties:")
+	Dim FirstLayer As lgMapTiledMapLayer = TiledMap.Layers.Get(0)
+	Log("- name=" & FirstLayer.Name)
+	Log("- nb. of objects=" & FirstLayer.Objects.Count)
+	Log("--------")
+	Log("Tileset properties:")
+	Dim FirstTileset As lgMapTiledMapSet = lstTilesets.Get(0)
+	Log("- name=" & FirstTileset.Name)
+	lstProperties = FirstTileset.Properties.GetAllKeys
+	For i = 0 To lstProperties.Size - 1
+		Dim obj As Object = FirstTileset.Properties.Get(lstProperties.Get(i))
+		Log("- " & lstProperties.Get(i) & "=" & obj)
+	Next
+	Log("- size=" & FirstTileset.Size)
+	Log("--------")
+
+	'Initializes the renderer
+	Renderer.Initialize3(TiledMap, 1/64)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho2(False, (Width / Height) * 15, 15)
+	Camera.Position.Set(13, 0, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.55, 0.55, 0.55, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+	Renderer.SetCameraView(Camera)
+
+	'Draws the tiled map
+	Renderer.Render
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	TiledMap.dispose
+End Sub

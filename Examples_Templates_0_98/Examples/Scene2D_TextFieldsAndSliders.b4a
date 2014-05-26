@@ -1,0 +1,224 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D TextFields+Sliders
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Atlas As lgTextureAtlas
+	Dim Font As lgBitmapFont
+	Dim Stage As lgScn2DStage
+
+	Dim TextField(4) As lgScn2DTextField
+	Dim npTFCursor As lgScn2DNinePatchDrawable
+	Dim rdTFSelection As lgScn2DTextureRegionDrawable
+	Dim npTextFieldBkgd As lgScn2DNinePatchDrawable
+	Dim stylTextField As lgScn2DTextFieldStyle
+
+	Dim Slider(2) As lgScn2DSlider
+	Dim npSliderBkgd As lgScn2DNinePatchDrawable
+	Dim rdSliderKnob As lgScn2DTextureRegionDrawable
+	Dim stylSlider As lgScn2DSliderStyle
+
+	Dim ProgrBar As lgScn2DProgressBar
+	Dim npProgrBarBkgd As lgScn2DNinePatchDrawable
+	Dim npProgrBarFill As lgScn2DNinePatchDrawable
+	Dim stylProgrBar As lgScn2DProgressBarStyle
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes LibGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs LibGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs LibGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the atlas
+	Atlas.InitializeWithFile("atlas/uiskin.pack")
+
+	'Gets the font from the atlas
+	Dim Region As lgTextureAtlasRegion = Atlas.FindRegion("arial22")
+	Font.Initialize4(lGdx.Files.internal("font/arial22.fnt"), Region)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.2)
+
+	'Gets the text field's cursor from the atlas
+	npTFCursor.Initialize2(Atlas.Create9Patch("cursor"))
+
+	'Gets the selection from the atlas
+	rdTFSelection = Atlas.CreateRegionDrawable("selection")
+
+	'Gets the text field's background from the atlas
+	npTextFieldBkgd.Initialize2(Atlas.Create9Patch("textfield"))
+	npTextFieldBkgd.LeftWidth = Font.SpaceWidth
+	npTextFieldBkgd.RightWidth = Font.SpaceWidth
+
+	'Creates the text field's style
+	stylTextField.Initialize(Font, Font.Color.WHITE, npTFCursor)
+	stylTextField.disabledFontColor = Font.Color.GRAY
+	stylTextField.focusedFontColor = Font.Color.GREEN
+	stylTextField.background = npTextFieldBkgd
+	stylTextField.selection = rdTFSelection
+
+	'Creates and places the text fields
+	For i = 0 To 3
+		TextField(i).Initialize("", stylTextField, "TF" & i)
+		TextField(i).X = 10dip
+		TextField(i).Y = lGdx.Graphics.Height - 60dip - (i * 60dip)
+		TextField(i).Height = 50dip
+		TextField(i).Width = 200dip
+		Stage.AddActor(TextField(i))
+	Next
+	TextField(0).MessageText = "Up to 12 char."
+	TextField(0).MaxLength = 12
+	TextField(1).MessageText = "Only numbers"
+	TextField(1).RightAligned = True
+	TextField(2).MessageText = "Password"
+	TextField(2).PasswordMode = True
+	TextField(2).PasswordCharacter = "*"
+	TextField(3).Text = "Disabled"
+	TextField(3).Disabled = True
+
+	'Gets the slider's background from the atlas
+	npSliderBkgd.Initialize2(Atlas.Create9Patch("default-slider"))
+
+	'Gets the slider's knob from the atlas
+	rdSliderKnob = Atlas.CreateRegionDrawable("default-slider-knob")
+
+	'Creates the slider's style
+	Dim Ratio As Float = 30dip / rdSliderKnob.MinHeight
+	stylSlider.Initialize(npSliderBkgd, rdSliderKnob)
+	stylSlider.SetKnobSize(rdSliderKnob.MinWidth * Ratio, rdSliderKnob.MinHeight * Ratio)
+
+	'Creates and places the sliders
+	Slider(0).Initialize(0, 100, 1, False, stylSlider, "SLD0")
+	Slider(0).X = 10dip
+	Slider(0).Y = lGdx.Graphics.Height - 310dip
+	Slider(0).Height = 50dip
+	Slider(0).Width = 200dip
+	Stage.AddActor(Slider(0))
+	Slider(1).Initialize(0, 100, 1, True, stylSlider, "SLD1")
+	Slider(1).X = 240dip
+	Slider(1).Y = lGdx.Graphics.Height - 390dip
+	Slider(1).Height = 360dip
+	Slider(1).Width = 50dip
+	Stage.AddActor(Slider(1))
+
+	'Gets the drawables for the progress bar from the atlas
+	npProgrBarBkgd.Initialize2(Atlas.Create9Patch("default-round"))
+	npProgrBarFill.Initialize2(Atlas.Create9Patch("default-round-down"))
+	npProgrBarBkgd.MinHeight = 50dip
+	npProgrBarBkgd.LeftWidth = 3dip
+	npProgrBarBkgd.RightWidth = 3dip
+	npProgrBarFill.MinHeight = 44dip
+
+	'Creates the style of the progress bar
+	stylProgrBar.Initialize(npProgrBarBkgd, Null)
+	stylProgrBar.knobBefore = npProgrBarFill
+
+	'Creates and places the progress bar
+	ProgrBar.Initialize(0, 100, 1, False, stylProgrBar, "PB")
+	ProgrBar.X = 10dip
+	ProgrBar.Y = lGdx.Graphics.Height - 380dip
+	ProgrBar.Height = 50dip
+	ProgrBar.Width = 200dip
+	ProgrBar.AnimateDuration = 0.8
+	Stage.AddActor(ProgrBar)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.45, 0.45, 0.7, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the actors
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Atlas.dispose
+End Sub
+
+Sub TF0_Changed(Key As Char, Text As String)
+	'Logs each typed key and the resulting text of the first field
+	Log("Key=" & Key & " TF0=" & Text)
+End Sub
+
+Sub TF1_AcceptChar(Key As Char) As Boolean
+	'Accepts only unsigned decimal numbers
+	Dim DecimalPoint As Boolean = TextField(1).Text.Contains(".")
+	Return (Asc(Key) >= Asc(0) AND Asc(Key) <= Asc(9)) OR (Asc(Key) = Asc(".") AND Not(DecimalPoint))
+End Sub
+
+Sub SLD0_Changed(NewValue As Float)
+	If Slider(0).isDragging Then
+		'Synchronizes the vertical slider and the progress bar with this slider
+		Slider(1).Value = Slider(0).Value
+		ProgrBar.Value = Slider(0).Value
+	Else
+		'Logs the new value
+		Log("SliderH=" & NumberFormat(NewValue, 1, 1))
+	End If
+End Sub
+
+Sub SLD1_Changed(NewValue As Float)
+	If Slider(1).isDragging Then
+		'Synchronizes the horizontal slider and the progress bar with this slider
+		Slider(0).Value = Slider(1).Value
+		ProgrBar.Value = Slider(1).Value
+	Else
+		'Logs the new value
+		Log("SliderV=" & NumberFormat(NewValue, 1, 1))
+	End If
+End Sub

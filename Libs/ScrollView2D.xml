@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <doclet-version-NOT-library-version>1.02</doclet-version-NOT-library-version>
+    <class>
+        <name>flm.b4a.scrollview2d.ScrollView2DWrapper</name>
+        <shortname>ScrollView2D</shortname>
+        <objectwrapper>flm.b4a.scrollview2d.TwoDScrollView</objectwrapper>
+        <owner>activity</owner>
+        <event>ScrollChanged(PosX As Int, PosY As Int)</event>
+        <method>
+            <name>Initialize</name>
+            <comment>Initializes the ScrollView and sets its inner panel dimensions to the given width and height.
+You can later change these dimensions by calling ScrollView2D.Panel.Width or ScrollView2D.Panel.Height. 
+
+You should never use a ScrollView2D with a ListView, since ListView takes care of its own scrolling.
+Most importantly, doing this defeats all of the important optimizations in ListView for dealing with
+large lists, since it effectively forces the ListView to display its entire list of items to fill up
+the infinite container supplied by ScrollView2D.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>ba</name>
+                <type>anywheresoftware.b4a.BA</type>
+            </parameter>
+            <parameter>
+                <name>Width</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Height</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>EventName</name>
+                <type>java.lang.String</type>
+            </parameter>
+        </method>
+        <method>
+            <name>RequestFocus</name>
+            <comment>Tries to set the focus to this view.
+Returns True if the focus was set.</comment>
+            <returntype>boolean</returntype>
+        </method>
+        <method>
+            <name>BringToFront</name>
+            <comment>Changes the Z order of this view and brings it to the front.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>ScrollingIsFinished</name>
+            <comment>Returns whether the ScrollView2D has finished scrolling.</comment>
+            <returntype>boolean</returntype>
+        </method>
+        <method>
+            <name>RemoveView</name>
+            <comment>Removes this view from its parent.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>ScrollbarsVisibility</name>
+            <comment>Sets the scrollbars visibility.
+They are visible by default.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>HorizontalVisible</name>
+                <type>boolean</type>
+            </parameter>
+            <parameter>
+                <name>VerticalVisible</name>
+                <type>boolean</type>
+            </parameter>
+        </method>
+        <method>
+            <name>SetBackgroundImage</name>
+            <comment></comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Bitmap</name>
+                <type>android.graphics.Bitmap</type>
+            </parameter>
+        </method>
+        <method>
+            <name>SetLayout</name>
+            <comment>Changes the view position and size.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Left</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Top</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Width</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Height</name>
+                <type>int</type>
+            </parameter>
+        </method>
+        <method>
+            <name>Invalidate</name>
+            <comment>Invalidates the whole view forcing the view to redraw itself.
+Redrawing will only happen when the program can process messages. Usually when it finishes running the current code.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>SmoothScrollTo</name>
+            <comment>Scrolls smoothly to the given position.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>PosX</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>PosY</name>
+                <type>int</type>
+            </parameter>
+        </method>
+        <method>
+            <name>Invalidate3</name>
+            <comment>Invalidates the given rectangle.
+Redrawing will only happen when the program can process messages. Usually when it finishes running the current code.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Left</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Top</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Right</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Bottom</name>
+                <type>int</type>
+            </parameter>
+        </method>
+        <method>
+            <name>DisableTouchEventInterception</name>
+            <comment>Prevents the ScrollView2D from intercepting the touch events.
+You should only call this function when the SV2D is in conflict with its parent about scrolling (e.g. AHViewPager).</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Disabled</name>
+                <type>boolean</type>
+            </parameter>
+        </method>
+        <method>
+            <name>FullScroll</name>
+            <comment>Scrolls the scroll view to the beginning or end, horizontally or/and vertically.
+Direction:
+0 = horizontally 
+1 = vertically
+2 = horizontally and vertically</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Direction</name>
+                <type>byte</type>
+            </parameter>
+            <parameter>
+                <name>ToTheEnd</name>
+                <type>boolean</type>
+            </parameter>
+            <parameter>
+                <name>Smoothly</name>
+                <type>boolean</type>
+            </parameter>
+        </method>
+        <method>
+            <name>GiveFocusToFirstVisible</name>
+            <comment>Sets the focus to the first focusable view in the visible area of the ScrollView2D panel.
+You should call this function after a FullScroll, SmoothScrollTo or H/VScrollPosition to move the focus.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>Invalidate2</name>
+            <comment>Invalidates the given rectangle.
+Redrawing will only happen when the program can process messages. Usually when it finishes running the current code.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Rect</name>
+                <type>android.graphics.Rect</type>
+            </parameter>
+        </method>
+        <method>
+            <name>SendToBack</name>
+            <comment>Changes the Z order of this view and sends it to the back.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>FadingEdges</name>
+            <comment>Defines whether the edges should be faded when this view is scrolled.
+They are faded by default.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Enabled</name>
+                <type>boolean</type>
+            </parameter>
+        </method>
+        <method>
+            <name>IsInitialized</name>
+            <comment></comment>
+            <returntype>boolean</returntype>
+        </method>
+        <property>
+            <name>Top</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>top</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the view's top.</comment>
+        </property>
+        <property>
+            <name>Enabled</name>
+            <returntype>boolean</returntype>
+            <parameter>
+                <name>Enabled</name>
+                <type>boolean</type>
+            </parameter>
+            <comment></comment>
+        </property>
+        <property>
+            <name>HorizontalScrollPosition</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Scroll</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets/sets the horizontal scroll position.</comment>
+        </property>
+        <property>
+            <name>Visible</name>
+            <returntype>boolean</returntype>
+            <parameter>
+                <name>Visible</name>
+                <type>boolean</type>
+            </parameter>
+            <comment></comment>
+        </property>
+        <property>
+            <name>Background</name>
+            <returntype>android.graphics.drawable.Drawable</returntype>
+            <parameter>
+                <name>drawable</name>
+                <type>android.graphics.drawable.Drawable</type>
+            </parameter>
+            <comment>Gets or sets the background drawable.</comment>
+        </property>
+        <property>
+            <name>Height</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>height</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the view's height.</comment>
+        </property>
+        <property>
+            <name>Left</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>left</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the view's left.</comment>
+        </property>
+        <property>
+            <name>Color</name>
+            <parameter>
+                <name>color</name>
+                <type>int</type>
+            </parameter>
+            <comment>Sets the background of the view to be a ColorDrawable with the given color.
+If the current background is of type GradientDrawable or ColorDrawable the round corners will be kept.</comment>
+        </property>
+        <property>
+            <name>Panel</name>
+            <returntype>anywheresoftware.b4a.objects.PanelWrapper</returntype>
+            <comment></comment>
+        </property>
+        <property>
+            <name>Tag</name>
+            <returntype>java.lang.Object</returntype>
+            <parameter>
+                <name>tag</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <comment>Gets or sets the Tag value. This is a place holder which can used to store additional data.</comment>
+        </property>
+        <property>
+            <name>VerticalScrollPosition</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Scroll</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets/sets the vertical scroll position.</comment>
+        </property>
+        <property>
+            <name>Width</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>width</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the view's width.</comment>
+        </property>
+        <field>
+            <name>FS_DIR_HORZ</name>
+            <comment></comment>
+            <returntype>byte</returntype>
+        </field>
+        <field>
+            <name>FS_DIR_VERT</name>
+            <comment></comment>
+            <returntype>byte</returntype>
+        </field>
+        <field>
+            <name>FS_ToTheEND</name>
+            <comment></comment>
+            <returntype>boolean</returntype>
+        </field>
+        <field>
+            <name>FS_DIR_HORZ_AND_VERT</name>
+            <comment></comment>
+            <returntype>byte</returntype>
+        </field>
+    </class>
+    <version>1.1</version>
+    <comment>ScrollView2D = HorizontalScrollView + VerticalScrollView</comment>
+    <author>Fr\u00e9d\u00e9ric Leneuf-Magaud</author>
+</root>

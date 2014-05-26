@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <doclet-version-NOT-library-version>1.02</doclet-version-NOT-library-version>
+    <class>
+        <name>flm.b4a.betterdialogs.BetterDialogs</name>
+        <shortname>BetterDialogs</shortname>
+        <owner>activity</owner>
+        <event>Validation(Answer As String, CompactAnswer As String) As String</event>
+        <event>BackKeyPressed As Boolean</event>
+        <method>
+            <name>CloseDialog</name>
+            <comment>Closes the current dialog.
+Response: One of the DialogResponse constants.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>Response</name>
+                <type>int</type>
+            </parameter>
+        </method>
+        <method>
+            <name>CustomDialog</name>
+            <comment>Shows a modal custom dialog.
+ Returns one of the DialogResponse values.&lt;BR/&gt;
+Title: The dialog title. It can be a view (a label, a panel, ...) or a string (the HTML tags in the string are interpreted).
+TitleWidth,TitleHeight: Width and height of the title. Relevant only when the title is a view.
+Dialog: The dialog body. It can be any view.
+DlgWidth,DlgHeight: Width and height of the dialog body.
+Margin: Width of the margin added on each side of the dialog.
+Background: The dialog background. It can be a color or a drawable. Pass Null if you want to keep the default background.
+PositiveButton: The "positive" button to display. It can be a button or a string (the HTML tags in the string are interpreted). Pass Null or "" if you don't want to show the button.
+CancelButton: The "cancel" button to display. It can be a button or a string (the HTML tags in the string are interpreted). Pass Null or "" if you don't want to show the button.
+NegativeButton: The "negative" button to display. It can be a button or a string (the HTML tags in the string are interpreted). Pass Null or "" if you don't want to show the button.
+OpenKeyboard: If True, open the virtual keyboard when the dialog is shown. Relevant only when the dialog contains an editable view.
+EvtPrefix: Prefix for the BackKeyPressed event.</comment>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Title</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>TitleWidth</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>TitleHeight</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Dialog</name>
+                <type>anywheresoftware.b4a.objects.ConcreteViewWrapper</type>
+            </parameter>
+            <parameter>
+                <name>DlgWidth</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>DlgHeight</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Margin</name>
+                <type>int</type>
+            </parameter>
+            <parameter>
+                <name>Background</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>PositiveButton</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>CancelButton</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>NegativeButton</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>OpenKeyboard</name>
+                <type>boolean</type>
+            </parameter>
+            <parameter>
+                <name>EvtPrefix</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>ba</name>
+                <type>anywheresoftware.b4a.BA</type>
+            </parameter>
+        </method>
+        <method>
+            <name>MsgBox</name>
+            <comment>Shows a modal message box.
+ Returns one of the DialogResponse values.&lt;BR/&gt;
+Title: The dialog title. HTML tags (&amp;lt;B&amp;gt;, &amp;lt;I&amp;gt;, &amp;lt;U&amp;gt;, &amp;lt;BR&amp;gt;, &amp;lt;Sup&amp;gt;, &amp;lt;Sub&amp;gt;, &amp;lt;Font Color=...&amp;gt;, &amp;lt;TT&amp;gt;, &amp;lt;H1&amp;gt; to &amp;lt;H6&amp;gt;, etc.) are interpreted.
+Message: The dialog message. HTML tags are interpreted.
+Positive: The text to display for the "positive" button. Pass "" if you don't want to show the button.
+Cancel: The text to display for the "cancel" button. Pass "" if you don't want to show the button.
+Negative: The text to display for the "negative" button. Pass "" if you don't want to show the button.
+Icon: An image (bitmap or drawable) that will be drawn near the title. Pass Null if you don't want to show an icon.</comment>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Title</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Message</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Positive</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Cancel</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Negative</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Icon</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>ba</name>
+                <type>anywheresoftware.b4a.BA</type>
+            </parameter>
+        </method>
+        <method>
+            <name>InputBox</name>
+            <comment>Shows a modal input box.
+ Returns one of the DialogResponse values.&lt;BR/&gt;
+Title: The dialog title. HTML tags (&amp;lt;B&amp;gt;, &amp;lt;I&amp;gt;, &amp;lt;U&amp;gt;, &amp;lt;BR&amp;gt;, &amp;lt;Sup&amp;gt;, &amp;lt;Sub&amp;gt;, &amp;lt;Font Color=...&amp;gt;, &amp;lt;TT&amp;gt;, &amp;lt;H1&amp;gt; to &amp;lt;H6&amp;gt;, etc.) are interpreted.
+Params: A set of parameters defining the behaviour and the appearance of the dialog.
+Positive: The text to display for the "positive" button. Pass "" if you don't want to show the button.
+Cancel: The text to display for the "cancel" button. Pass "" if you don't want to show the button.
+Negative: The text to display for the "negative" button. Pass "" if you don't want to show the button.
+Icon: An image (bitmap or drawable) that will be drawn near the title. Pass Null if you don't want to show an icon.</comment>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Title</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Params</name>
+                <type>flm.b4a.betterdialogs.BetterDialogs.InputParams</type>
+            </parameter>
+            <parameter>
+                <name>Positive</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Cancel</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Negative</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>Icon</name>
+                <type>java.lang.Object</type>
+            </parameter>
+            <parameter>
+                <name>ba</name>
+                <type>anywheresoftware.b4a.BA</type>
+            </parameter>
+        </method>
+        <field>
+            <name>CanceledOnTouchOutside</name>
+            <comment></comment>
+            <returntype>boolean</returntype>
+        </field>
+    </class>
+    <class>
+        <name>flm.b4a.betterdialogs.BetterDialogs.InputParams</name>
+        <shortname>BD_InputBoxParams</shortname>
+        <owner>process</owner>
+        <method>
+            <name>Initialize</name>
+            <comment></comment>
+            <returntype>void</returntype>
+        </method>
+        <property>
+            <name>Default</name>
+            <returntype>java.lang.String</returntype>
+            <parameter>
+                <name>Text</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <comment>Gets or sets the initial text of the input field.</comment>
+        </property>
+        <property>
+            <name>Format</name>
+            <returntype>java.lang.String</returntype>
+            <parameter>
+                <name>Mask</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <comment>Gets or sets the input mask.
+ Mask characters:
+ # = Digit
+ L = Letter
+ A = Alphanumeric
+ H = Hexadecimal
+ ? = Any character
+ Examples:
+ - Date &amp;amp; time = "##/##/#### ##:##"
+ - Phone number = "(###) ###-####"
+ - IP address = "###.###.###.###"
+ - MAC address = "HH:HH:HH:HH:HH:HH"
+ - Parental lock password = "AAAA"</comment>
+        </property>
+        <property>
+            <name>PasswordMode</name>
+            <returntype>boolean</returntype>
+            <parameter>
+                <name>Enabled</name>
+                <type>boolean</type>
+            </parameter>
+            <comment>Gets or sets whether the input field should be in password mode and hide the actual characters.
+ Default = False</comment>
+        </property>
+        <property>
+            <name>ValidationCallback</name>
+            <parameter>
+                <name>Callback</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <comment>Sets the function to call when the dialog is exited with the "positive" button.
+ The callback function will return "" if the input is valid or an error message if the input is invalid.
+ Example:&lt;code&gt;
+ IP.ValidationCallback("Input_Validation")&lt;/code&gt;</comment>
+        </property>
+        <property>
+            <name>CompactAnswer</name>
+            <returntype>java.lang.String</returntype>
+            <comment>Returns a copy of the user input without the leading and trailing spaces, and without the placeholders if Format is not empty.</comment>
+        </property>
+        <property>
+            <name>InputType</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Type</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the input type flag. This flag is used to determine the settings of the virtual keyboard.
+ The value is one of the INPUT_TYPE constants.</comment>
+        </property>
+        <property>
+            <name>Answer</name>
+            <returntype>java.lang.String</returntype>
+            <comment>Returns the user input.</comment>
+        </property>
+        <property>
+            <name>InputTextSize</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Size</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the text size of the input field.</comment>
+        </property>
+        <property>
+            <name>Hint</name>
+            <returntype>java.lang.String</returntype>
+            <parameter>
+                <name>Text</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <comment>Gets or sets the text that will appear when the input field is empty.</comment>
+        </property>
+        <property>
+            <name>WithSuggestions</name>
+            <returntype>boolean</returntype>
+            <parameter>
+                <name>Enabled</name>
+                <type>boolean</type>
+            </parameter>
+            <comment>Sets whether the virtual keyboard displays any dictionary-based candidates.
+ This setting is ignored if Format is not empty or InputType is set to Numbers or Phone.
+ Default = False</comment>
+        </property>
+        <property>
+            <name>Multiline</name>
+            <returntype>boolean</returntype>
+            <parameter>
+                <name>Mode</name>
+                <type>boolean</type>
+            </parameter>
+            <comment>Gets or sets whether the input field should be in multiline mode.
+ Default = single line mode.</comment>
+        </property>
+        <property>
+            <name>CursorPosition</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Value</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the cursor position in the input field.
+ It is set by default to the length of the default text.</comment>
+        </property>
+        <property>
+            <name>Question</name>
+            <returntype>java.lang.String</returntype>
+            <parameter>
+                <name>Text</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <comment>Gets or sets the text above the input field. HTML tags are interpreted.</comment>
+        </property>
+        <property>
+            <name>QuestionTextSize</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Size</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the text size of the question.</comment>
+        </property>
+        <property>
+            <name>SpaceBetween</name>
+            <returntype>int</returntype>
+            <parameter>
+                <name>Value</name>
+                <type>int</type>
+            </parameter>
+            <comment>Gets or sets the height of the gap between the question and the input field.</comment>
+        </property>
+        <field>
+            <name>INPUT_TYPE_NUMBERS</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>HintColor</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>INPUT_TYPE_DECIMAL_NUMBERS</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>Gravity</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>INPUT_TYPE_TEXT</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>INPUT_TYPE_PHONE</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>INPUT_TYPE_TEXT_WITH_CAPS</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+        <field>
+            <name>INPUT_TYPE_NUMBERS_WITH_SIGN</name>
+            <comment></comment>
+            <returntype>int</returntype>
+        </field>
+    </class>
+    <version>1.4</version>
+    <author>Fr\u00e9d\u00e9ric Leneuf-Magaud</author>
+    <dependsOn>MaskedEditText</dependsOn>
+</root>

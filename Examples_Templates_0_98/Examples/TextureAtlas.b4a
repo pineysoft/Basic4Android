@@ -1,0 +1,129 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: lGdx Texture Atlas
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+	#IgnoreWarnings: 14
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Batch As lgSpriteBatch
+	Dim ShapeRdr As lgShapeRenderer
+	Dim Atlas As lgTextureAtlas
+	Dim sprBadLogicSlice, sprLogoB4A, sprStar As lgSprite
+	Dim Font As lgBitmapFont
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the renderers
+	Batch.Initialize
+	ShapeRdr.Initialize
+	ShapeRdr.SetColorRGBA(0, 0.5, 0, 1) 'Dark green
+
+	'Loads the texture atlas
+	Atlas.InitializeWithFile("atlas/atlas.pack")
+
+	'Logs all regions
+	Dim LR As List = Atlas.GetAllRegions
+	For i = 0 To LR.Size - 1
+		Dim AR As lgTextureAtlasRegion = LR.Get(i)
+		Log("- " & AR.Name & " ---")
+		Log("  Position: " & AR.RegionX & ", " & AR.RegionY)
+		Log("  Original size: " & AR.OriginalWidth & "x" & AR.OriginalHeight)
+		Log("  Packed size: " & AR.PackedWidth & "x" & AR.PackedHeight)
+		Log("  Offset: " & AR.OffsetX & ", " & AR.OffsetY)
+	Next
+
+	'Creates the sprites from the atlas
+	sprBadLogicSlice = Atlas.CreateSprite("badlogicslice")
+	sprLogoB4A = Atlas.CreateSprite("b4a_logo")
+	sprStar = Atlas.CreateSprite("particle-star")
+
+	'Sets the position of sprites
+	sprBadLogicSlice.SetPosition(0, lGdx.Graphics.Height - sprBadLogicSlice.Height - 40)
+	sprStar.SetPosition(sprBadLogicSlice.Width, sprBadLogicSlice.Y)
+	sprLogoB4A.SetPosition(sprBadLogicSlice.Width + sprStar.Width, sprBadLogicSlice.Y)
+
+	'Creates the font from the atlas
+	Dim Region As lgTextureAtlasRegion = Atlas.FindRegion("font")
+	Font.Initialize4(lGdx.Files.internal("font/font.fnt"), Region)
+	Font.Color = Font.Color.YELLOW
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density)
+
+	'Colors the surface in black
+	GL.glClearColor(0, 0, 0, 1)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Draws the sprites and the text
+	Batch.Begin
+	sprBadLogicSlice.Draw(Batch)
+	sprLogoB4A.Draw(Batch)
+	sprStar.Draw(Batch)
+	Font.Draw(Batch, "This font was packed!", 0, lGdx.Graphics.Height - sprBadLogicSlice.Height - 75)
+	Batch.End
+
+	'Draws the bounds of all sprites
+	ShapeRdr.Begin(ShapeRdr.SHAPETYPE_Line)
+	ShapeRdr.Rect(sprBadLogicSlice.X, sprBadLogicSlice.Y, sprBadLogicSlice.Width, sprBadLogicSlice.Height)
+	ShapeRdr.Rect(sprStar.X, sprStar.Y, sprStar.Width, sprStar.Height)
+	ShapeRdr.Rect(sprLogoB4A.X, sprLogoB4A.Y, sprLogoB4A.Width, sprLogoB4A.Height)
+	ShapeRdr.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Atlas.dispose
+	Font.dispose
+	ShapeRdr.dispose
+	Batch.dispose
+End Sub

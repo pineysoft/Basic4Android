@@ -1,0 +1,19 @@
+
+pad.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+bkgd
+  rotate: false
+  xy: 1, 26
+  size: 137, 137
+  orig: 137, 137
+  offset: 0, 0
+  index: -1
+knob
+  rotate: false
+  xy: 1, 1
+  size: 23, 23
+  orig: 30, 30
+  offset: 3, 4
+  index: -1

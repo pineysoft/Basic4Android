@@ -1,0 +1,733 @@
+﻿Version=3.5
+IconFile=
+NumberOfModules=0
+Package=gaysoft.Circulator
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=1
+File1=Layout1.bal
+NumberOfLibraries=7
+Library1=animationplus
+Library2=core
+Library3=expressionevaluator
+Library4=javaobject
+Library5=phone
+Library6=reflection
+Library7=stringutils
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: Circulator
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: False
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private leftSideMargin As Int
+	Private rightSideMargin As Int	
+	Dim centerH As Int
+	Dim centerV As Int		
+	Dim result As Float
+	Dim btnHit As Boolean	
+	Dim currentNum As String	
+	Dim fromx,fromy,tox,toy As Int	
+	Dim timerPress As Timer
+	Dim timerHold As Timer
+	Dim vibrateSetting As Int = 25
+	Private displayScrollLeftPos As Int
+	Private displayScrollWidth As Int
+	Private displayScrollTopPos As Int
+	Private displayScrollHeight As Int
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	'These variables can only be accessed from this module.
+
+	Dim Obj1 As Reflector
+	Dim picCanvas As Canvas
+	Dim DestRect As Rect
+ 	Dim lblList As List
+	Private btnDivide As Button
+	Private btnMinus As Button
+	Private btnMultiply As Button
+	Private btnPlus As Button
+	Private lbl0 As Label
+	Private lbl1 As Label
+	Private lbl2 As Label
+	Private lbl3 As Label
+	Private lbl4 As Label
+	Private lbl5 As Label
+	Private lbl6 As Label
+	Private lbl7 As Label
+	Private lbl8 As Label
+	Private lbl9 As Label
+	Private Panel1 As Panel
+	Private btnClear As Button
+	Private lblDisplay As Label
+	Private lblDec1 As Label
+	Private btnOp As Button
+	Private btnUndo As Button
+	Private hasDecimal As Boolean
+	Private btnBracket As Button
+	Private tbtnMode As ToggleButton
+	Private lblComplete As Label
+	Dim lastLabel As Label
+	Dim lblBig As Label
+	Dim lblViewCalc As Label
+
+	Private vib As PhoneVibrate
+	Private lblMoving As Label
+	Private lblDisplayBox As Label
+	Private displayAnim As AnimationPlus
+	Private lblAnimated As Label
+	Private scvComplete As HorizontalScrollView
+
+	Private btnBracketRight As Button
+	Private btnSqRoot As Button
+	Private btnSquared As Button
+	Private btnPercent As Button
+	Private btnPowerOfx As Button
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	' Setup all the Global Variable values
+	InitGlobalVariables
+	
+	' Extra setup for views added by designer
+	InitViews
+	
+	' Create a list to store each label for the numbers and decimal point
+	FillLabelList
+	
+	' Setup the timers for allowing for long press on numbers to repeat
+	SetupTimers
+	
+	' Setup the animations that will Display each number entered on Touch Up Event
+	SetupAnimations
+	
+	FixUpExtraButtons
+	
+End Sub
+
+Sub InitGlobalVariables
+	centerH = Activity.Width/2
+	centerV = Activity.Height/2
+	
+	lblBig.Initialize("")
+	lblBig.Tag = "BigLabel"
+	lblBig.Color = Colors.Transparent
+
+	displayScrollLeftPos = 5dip
+	displayScrollWidth = 100%x - 15dip
+	displayScrollTopPos = 5dip
+	displayScrollHeight = 55dip 
+	
+End Sub
+
+Sub SetupTimers
+	timerPress.Initialize("timerPress",800)
+	timerHold.Initialize("timerHold",400)
+End Sub
+
+
+Sub SetupAnimations
+	displayAnim.InitializeScaleCenter("Animation",1,1,4,4,lblAnimated)
+	displayAnim.Duration = 250
+	displayAnim.RepeatMode = displayAnim.REPEAT_REVERSE
+End Sub
+
+Sub InitViews
+	Activity.LoadLayout("Layout1")
+	
+	picCanvas.Initialize(Panel1)
+	DestRect.Initialize(0dip, 0dip, 100%x, 100%y)
+	picCanvas.DrawRect(DestRect, Colors.Transparent, True, 1dip)
+	Panel1.Invalidate
+
+	Obj1.Target = Panel1
+	Obj1.SetOnTouchListener("Panel1_OnTouch")
+	
+	Activity.AddView(lblBig,0,0,0,0)
+	
+	lblMoving.Width = -2
+	
+	' Setup the Scroll View to handle the Complete formula display
+	scvComplete.Initialize(100,"")
+	scvComplete.Color = Colors.ARGB(255,142,180,152)
+	Activity.AddView(scvComplete, displayScrollLeftPos, displayScrollTopPos, displayScrollWidth, displayScrollHeight)
+	
+	' Setup the Formula Label that sits inside the Scrollview
+	lblComplete.Initialize("lblComplete")
+	'lblComplete.Color = Colors.ARGB(255,142,180,152)
+	lblComplete.TextColor = Colors.Black
+	lblComplete.Color = Colors.Transparent
+	lblComplete.TextSize = 30
+	
+	' Add the label to the Activity so we can measure it first
+	Activity.AddView(lblComplete,0,0,0,0)
+	lblComplete.Width = picCanvas.MeasureStringWidth(lblComplete.Text, lblComplete.Typeface, lblComplete.TextSize) + 20dip
+	RemoveMultiLine(lblComplete)
+	' Remove it from the Activity so we can now add it to the ScrollView
+	lblComplete.RemoveView
+	
+	' Add it to the ScrollView and allow extra to view it properly
+	scvComplete.Panel.AddView(lblComplete,displayScrollWidth - lblComplete.Width,displayScrollTopPos,displayScrollWidth,displayScrollHeight)
+	scvComplete.Panel.Width = lblComplete.Width
+	
+	lblDisplayBox.Initialize("")
+	lblDisplayBox.SetBackgroundImage(LoadBitmap(File.DirAssets, "displayPanel.png"))
+	Activity.AddView(lblDisplayBox,0,0,100%x,60dip)
+	
+End Sub
+
+Sub FixUpExtraButtons
+	Dim jo As JavaObject = btnBracket
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))
+	
+	jo = btnBracketRight
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))
+	
+	jo = btnSqRoot
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))
+	
+	jo = btnSquared
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))
+	
+	jo = btnPercent
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))
+	
+	jo = btnPowerOfx
+	jo.RunMethod("setPadding", Array As Object(0, 0, 0, 0))	
+End Sub
+Sub Activity_Resume  
+End Sub
+
+Sub Animation_AnimationEnd
+	lblAnimated.Text = ""
+	lblAnimated.Color = Colors.Transparent
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	If timerPress.IsInitialized Then
+		timerPress.Enabled = False
+	End If
+	If timerHold.IsInitialized Then
+		timerHold.Enabled = False
+	End If
+End Sub
+
+Sub txt1_TextChanged (Old As String, New As String)
+	
+End Sub
+
+Sub FillLabelList()
+	lblList.Initialize
+	lblList.Clear
+	lblList.Add(lbl1)
+	lblList.Add(lbl2)
+	lblList.Add(lbl3)
+	lblList.Add(lbl4)
+	lblList.Add(lbl5)
+	lblList.Add(lbl6)
+	lblList.Add(lbl7)
+	lblList.Add(lbl8)
+	lblList.Add(lbl9)
+	lblList.Add(lbl0)
+	lblList.Add(lblDec1)
+End Sub
+
+Sub CheckLabels(x As Int, y As Int) As Label
+	Dim retLabel As Label
+	For I = 0 To lblList.Size - 1
+		
+		retLabel = GetALabel(x,y,lblList.Get(I))
+		If retLabel.IsInitialized Then
+			I = lblList.Size - 1
+		End If
+	Next
+	
+	If retLabel.IsInitialized AND retLabel.Text = "." AND lblDisplay.Text.Contains(".") Then
+		retLabel = Null
+	End If
+	Return retLabel
+End Sub
+
+Sub GetALabel(x As Int, y As Int, lbl As Label) As Label
+	
+	x = x + Panel1.Left
+	y = y + Panel1.top
+	
+	' Check the Top Left Quadrant
+	If x < centerH AND y  < centerV Then
+		If IsIn(x, lbl.Left, lbl.Left + lbl.width + leftSideMargin) AND IsIn(y, lbl.Top - 15, lbl.Top + lbl.Height + 15) Then
+			Return lbl
+		End If
+	End If
+	
+	' Check the Top Right Quadrant
+	If x > centerH AND y < centerV Then
+		If IsIn(x, lbl.Left - rightSideMargin, lbl.Left + lbl.width) AND IsIn(y, lbl.Top - 15, lbl.Top + lbl.Height + 15)  Then	
+			Return lbl
+		End If
+	End If
+	
+	' Check the Bottom Left Quadrant
+	If x < centerH AND y > centerV Then
+		If IsIn(x, lbl.Left, lbl.Left + lbl.width + leftSideMargin) AND IsIn(y, lbl.Top - 15, lbl.Top + lbl.Height + 15) Then		
+			Return lbl
+		End If
+	End If
+	
+	' Check the Bottom Right Quadrant
+	If x > centerH AND y > centerV Then
+		If IsIn(x, lbl.Left - rightSideMargin, lbl.Left + lbl.width) AND IsIn(y, lbl.Top - 15, lbl.Top + lbl.Height + 15) Then		
+			Return lbl
+		End If
+	End If
+
+	Return Null
+End Sub
+
+Sub IsIn(number As Int,  numStart As Int, numEnd As Int) As Boolean
+	Return number >= numStart AND number <= numEnd 
+End Sub
+
+Sub FindLabelXpos(value As String) As Int
+	Dim iloop As Int
+	Dim tempLabel As Label
+	For iloop = 0 To lblList.Size - 1
+		tempLabel = lblList.Get(iloop)
+		If tempLabel.Text = value Then
+			Return tempLabel.Left
+		End If
+	Next
+	
+	Return 0 
+End Sub
+Sub Panel1_OnTouch(viewtag As Object, action As Int, X As Float, Y As Float, motionevent As Object) As Boolean
+	Dim number As String = "x"
+	Dim currentLabel As Label
+	currentLabel.Initialize("")
+  Select action
+    Case Activity.ACTION_DOWN
+		displayAnim.Stop(lblAnimated)
+	    'puts a circle if the user just touches the screen briefly
+		btnHit = False
+		lblDisplay.Text = ""
+		fromx = X
+		fromy = Y
+		picCanvas.DrawCircle(fromx, fromy, 4dip, Colors.Red, True, 1dip)
+		currentLabel = CheckLabels(X,Y)
+		If currentLabel.IsInitialized Then
+			vib.vibrate(vibrateSetting)		
+			lblMoving.Color = Colors.ARGB(180,255,255,255)
+			lblMoving.Left = Panel1.Left + X - 80
+			lblMoving.Top = Panel1.Top + Y - 210		
+		 	number = currentLabel.Text			
+			UpdateLabel(X, number, currentLabel)
+		End If
+
+    Case Activity.ACTION_UP
+		timerPress.Enabled = False
+		timerHold.Enabled = False	
+		lblBig.Color = Colors.Transparent		
+		
+        'puts final circle as the user lifts their finger off the screen
+        tox = X
+        toy = Y
+        picCanvas.DrawCircle(tox, toy, 4dip, Colors.Red, True, 1dip)
+		UpdateDisplays	
+		hasDecimal = False
+		lblAnimated.Text = lblMoving.Text
+		lblMoving.Text = ""
+		lblMoving.Color = Colors.Transparent
+		displayAnim.Start(lblAnimated)
+    Case Activity.ACTION_MOVE
+        'Filled circles stop jaggies between lines
+        tox = X
+        toy = Y
+        picCanvas.DrawCircle(fromx, fromy, 4dip, Colors.Red, True, 1dip)
+        picCanvas.DrawLine(fromx,fromy,tox,toy,Colors.Red,8dip)
+        picCanvas.DrawCircle(tox, toy, 4dip, Colors.Red, True, 1dip)
+        fromx = tox
+        fromy = toy
+		currentLabel = CheckLabels(X,Y)
+		If currentLabel.IsInitialized Then
+			number = currentLabel.Text
+			timerHold.Enabled = False
+			timerPress.Enabled = True
+		Else
+			number = "x"
+			timerPress.Enabled = False
+			lblBig.Color = Colors.Transparent
+			currentNum = "x"
+			lblMoving.Left = Panel1.Left + X - 80
+			lblMoving.Top = Panel1.Top + Y - 210			
+			UpdateMargins
+		End If
+		If currentLabel.IsInitialized AND number <> currentNum Then
+			vib.vibrate(vibrateSetting)		
+			UpdateLabel(X,number, currentLabel)
+		End If
+    End Select 
+    Panel1.Invalidate    
+    Return True
+End Sub
+
+Public Sub UpdateMargins()
+	If lastLabel.IsInitialized Then
+		If lastLabel.Text <> "0" Then
+			If lastLabel.Left < centerH Then
+				leftSideMargin = 10
+				rightSideMargin = 50
+			Else
+				leftSideMargin = 50
+				rightSideMargin = 10			
+			End If
+		End If
+	End If
+End Sub
+
+Public Sub UpdateLabel(X As Int, number As String, currentLabel As Label)
+	If number = "." Then
+		If hasDecimal = False Then
+			lblDisplay.Text = lblDisplay.Text & number
+			btnHit = True
+			currentNum = number
+			hasDecimal = True
+			lastLabel = currentLabel
+		End If
+	Else
+		lblDisplay.Text = lblDisplay.Text & number
+		currentNum = number
+		btnHit = True
+		lastLabel = currentLabel
+
+		lblBig.Color = Colors.Red
+		lblBig.Left = currentLabel.Left - 30
+		lblBig.Top =  currentLabel.Top - 30
+		lblBig.width = currentLabel.Width + 60
+		lblBig.Height =  currentLabel.Height + 60
+	End If
+	
+	lblMoving.Text = lblDisplay.Text
+End Sub
+Sub btnClear_Click
+	ClearLines
+	lblDisplay.Text = ""
+	lblComplete.Text = ""
+	result = 0
+End Sub
+
+Sub DeleteViewByTag(act As Activity, tag As String, backwards As Boolean)
+	Dim loopVar As Int
+	Dim currentView As View
+	If backwards Then
+		For loopVar = act.NumberOfViews - 1 To 0 Step -1
+			currentView = act.GetView(loopVar)
+			If currentView.tag = tag Then
+				act.RemoveViewAt(loopVar)
+			End If
+		Next
+	Else
+		For loopVar = 0 To act.NumberOfViews - 1
+			currentView = act.GetView(loopVar)
+			If currentView.tag = tag Then
+				act.RemoveViewAt(loopVar)
+			End If
+		Next	
+	End If
+End Sub
+
+Sub UpdateDisplays
+	If lblDisplay.Text <> "." AND lblDisplay.Text <> "0" Then
+		Dim tempComplete As String = lblComplete.Text
+		If btnHit Then
+			If lblDisplay.Text.EndsWith(".") Then lblDisplay.Text = lblDisplay.Text & "0"
+			If tempComplete = "" Then				
+				tempComplete = lblDisplay.Text
+			Else
+				If tempComplete.EndsWith("(") Then
+					tempComplete = tempComplete & " " & lblDisplay.Text
+				Else If tempComplete.EndsWith(".") Then
+					tempComplete = tempComplete & " " & btnOp.Text & " " & lblDisplay.Text & "0"
+				Else
+					tempComplete = tempComplete & " " & btnOp.Text & " " & lblDisplay.Text	
+				End If
+			End If
+		
+			UpdateCompleteLabel(tempComplete)
+			
+			PerformCalculation
+
+		End If
+	End If
+	ClearLines
+	
+End Sub
+
+Sub UpdateCompleteLabel(newTextValue As String)
+	' Update the length of the Label before we put the text in.
+	
+	Dim width As Int = picCanvas.MeasureStringWidth(newTextValue, lblComplete.Typeface, lblComplete.TextSize)
+
+	lblComplete.width = width
+	lblComplete.Text = newTextValue
+	If lblComplete.width < scvComplete.width Then				
+		lblComplete.RemoveView	
+		scvComplete.Panel.AddView(lblComplete,displayScrollWidth - lblComplete.width,displayScrollTopPos,displayScrollWidth,displayScrollHeight)
+		scvComplete.Panel.width = lblComplete.width
+	Else
+		If lblComplete.Left <> displayScrollLeftPos Then
+			lblComplete.RemoveView	
+			scvComplete.Panel.AddView(lblComplete,displayScrollLeftPos,displayScrollTopPos,displayScrollWidth,displayScrollHeight)
+			scvComplete.Panel.width = lblComplete.width
+			scvComplete.ScrollPosition = scvComplete.Panel.width
+		Else
+			scvComplete.Panel.width = lblComplete.width
+			scvComplete.RequestFocus
+			scvComplete.ScrollPosition = lblComplete.width					
+		End If
+	End If
+	
+End Sub
+
+Sub PerformCalculation
+	If tbtnMode.Checked Then
+		Dim exp As Evaluator
+		Dim calculation As String = lblComplete.Text
+		calculation = calculation.Replace("÷","/")
+		exp.Initialize
+		
+		result = exp.Evaluate(calculation)
+	Else
+		Dim num As Float = lblDisplay.Text
+		
+		Select btnOp.Text
+			Case "+"
+				result = result + num
+			Case "-"
+				result = result - num
+			Case "*"
+				If result = 0 Then
+					result = num * 1
+				Else
+					result = result * num
+				End If
+			Case "÷"
+				If result = 0 Then
+					result = num / 1
+				Else
+					result = result / num
+				End If
+		End Select
+	End If
+	
+	Dim numI As Int = result
+	Dim numF As Float
+	numF = numI
+	
+	If numF <> result Then
+		lblDisplay.Text = result
+	Else
+		lblDisplay.Text = numI
+	End If
+End Sub
+
+Private Sub RemoveMultiLine(lbl As Label)
+   'sv.ScrollTo smoothly scrolls to the position. In this case we want to immediately change the scroll position
+   'so we use Reflection to call the native scrollTo method.
+   Dim r As Reflector
+   r.Target = lbl
+   r.RunMethod2("setSingleLine", True, "java.lang.boolean")
+End Sub
+
+Public Sub CutLastNumber
+	Dim foundAt As Int = 0
+	Dim before As String
+	For iLoop = lblComplete.Text.Length - 1 To 0 Step -1
+		If lblComplete.Text.CharAt(iLoop) = " " Then
+			foundAt = iLoop
+			iLoop = 0
+		End If
+	Next
+	
+	If foundAt > 0 Then
+		before = lblComplete.Text.SubString2(0,foundAt - 2)
+		lblComplete.Text = before
+	End If
+	
+	Dim exp As Evaluator
+	exp.Initialize
+	result = exp.Evaluate(lblComplete.Text)
+
+	Dim numI As Int = result
+	Dim numD As Double
+	numD = numI
+	
+	If numD <> result Then
+		lblDisplay.Text = result
+	Else
+		lblDisplay.Text = numI
+	End If
+End Sub
+
+Sub UpdateExpression
+	If tbtnMode.Checked Then
+		Dim calculation As String = lblComplete.Text
+		calculation = calculation.Replace("÷","/")
+		Dim exp As Evaluator
+		exp.Initialize
+		result = exp.Evaluate(calculation)
+		
+		Dim numI As Int = result
+		Dim numF As Float
+		numF = numI
+		
+		If numF <> result Then
+			lblDisplay.Text = result
+		Else
+			lblDisplay.Text = numI
+		End If		
+	End If
+End Sub
+
+Sub RedoCalc
+	Dim charloop As Int
+	Dim currentChar As String
+	Dim currentNumStr As String = ""
+	Dim currentTotal As Float = 0
+	Dim storedOp As String
+	
+	For charloop = 0 To lblComplete.Text.Length - 1
+		currentChar = lblComplete.Text.SubString2(charloop,charloop+1)
+
+		If IsNumber(currentChar) OR currentChar = "." Then
+			currentNumStr = currentNumStr & currentChar
+		Else If currentChar = "+" OR currentChar = "-" OR currentChar = "*" OR currentChar = "÷" Then
+			If storedOp = "" Then
+				currentTotal = currentNumStr
+			Else
+				Select storedOp
+					Case "+" 
+						currentTotal = currentTotal + currentNumStr
+					Case "-"
+						currentTotal = currentTotal - currentNumStr
+					Case "*" 
+						currentTotal = currentTotal * currentNumStr
+					Case "÷"
+						currentTotal = currentTotal / currentNumStr
+				End Select
+			End If
+			storedOp = currentChar
+			currentNumStr = ""
+		End If
+	Next
+	
+	' Because we won't find any operators at the end we need to calculate the last number
+	Select storedOp
+		Case "+" 
+			currentTotal = currentTotal + currentNumStr
+		Case "-"
+			currentTotal = currentTotal - currentNumStr
+		Case "*" 
+			currentTotal = currentTotal * currentNumStr
+		Case "÷"
+			currentTotal = currentTotal / currentNumStr
+	End Select	
+	
+	result = currentTotal
+
+	Dim numI As Int = result
+	Dim numD As Double
+	numD = numI
+	
+	If numD <> result Then
+		lblDisplay.Text = result
+	Else
+		lblDisplay.Text = numI
+	End If
+End Sub
+Sub ClearLines
+	picCanvas.DrawRect(DestRect, Colors.Transparent, True, 1dip)
+	Panel1.Invalidate
+End Sub
+Sub btnMinus_Click
+	btnOp.Text = "-"
+End Sub
+Sub btnMultiply_Click
+	btnOp.Text = "*"
+End Sub
+Sub btnDivide_Click
+	btnOp.Text = "÷"
+End Sub
+Sub btnPlus_Click
+	btnOp.Text = "+"
+End Sub
+Sub btnUndo_Click
+	CutLastNumber
+	UpdateCompleteLabel(lblComplete.Text)
+End Sub
+Sub btnBracket_Click
+	lblComplete.Text = lblComplete.Text & " " & btnOp.Text & " ("
+End Sub
+Sub btnBracket_LongClick
+	lblComplete.Text = lblComplete.Text & " )"
+	UpdateExpression
+End Sub
+Sub tbtnMode_CheckedChange(Checked As Boolean)
+	
+	If tbtnMode.Checked Then
+		UpdateExpression
+	Else
+		RedoCalc
+	End If
+
+End Sub
+Sub btnOp_Click
+	Select btnOp.Text
+	Case "+"
+		btnOp.Text = "-"
+	Case "-"
+		btnOp.Text = "*"
+	Case "*"
+		btnOp.Text = "÷"
+	Case "÷"
+		btnOp.Text = "+"		
+	End Select
+End Sub
+
+Sub timerPress_Tick
+	If lblDisplay.Text <> "." Then 
+		lblDisplay.Text = lblDisplay.Text & lastLabel.Text
+		timerPress.Enabled = False
+		timerHold.Enabled = True
+	End If
+End Sub
+
+Sub timerHold_Tick
+	If lblDisplay.Text <> "." Then lblDisplay.Text = lblDisplay.Text & lastLabel.Text
+End Sub
+Sub lblComplete_Click
+	lblViewCalc.Initialize("lblViewCalc")
+	lblViewCalc.Color = Colors.ARGB(200,255,255,255)
+	lblViewCalc.TextColor = Colors.Black	
+	lblViewCalc.Text = lblComplete.Text
+	lblViewCalc.TextSize = 30
+	Activity.AddView(lblViewCalc, 0,0,100%x, 100%y)
+End Sub
+
+Sub lblViewCalc_Click
+	lblViewCalc.RemoveView
+End Sub

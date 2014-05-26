@@ -1,0 +1,245 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Table
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim spAlignment As Spinner
+	Dim spColumnSize As Spinner
+	Dim spPadding As Spinner
+	Dim Atlas As lgTextureAtlas
+	Dim Font As lgBitmapFont
+	Dim Stage As lgScn2DStage
+	Dim Table As lgScn2DTable
+	Dim BkgdTexture As lgTexture
+	Dim TiledBkgd As lgScn2DTiledDrawable
+	Dim DebugMode As Boolean
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Adds the libGDX view
+	Dim V As View = lGdx.InitializeView("LG")
+	Activity.AddView(V, 0, 0, 100%x, 100%y - 80dip)
+
+	'Adds the labels
+	Dim lblAlignment As Label
+	lblAlignment.Initialize("")
+	lblAlignment.Gravity = Gravity.CENTER_HORIZONTAL + Gravity.CENTER_VERTICAL
+	lblAlignment.Text = "Alignment:"
+	lblAlignment.TextSize = 16
+	Activity.AddView(lblAlignment, 0, V.Height + 2dip, 105dip, 23dip)
+
+	Dim lblColumnSize As Label
+	lblColumnSize.Initialize("")
+	lblColumnSize.Gravity = Gravity.CENTER_HORIZONTAL + Gravity.CENTER_VERTICAL
+	lblColumnSize.Text = "Column size:"
+	lblColumnSize.TextSize = 16
+	Activity.AddView(lblColumnSize, 108dip, V.Height + 2dip, 105dip, 23dip)
+
+	Dim lblPadding As Label
+	lblPadding.Initialize("")
+	lblPadding.Gravity = Gravity.CENTER_HORIZONTAL + Gravity.CENTER_VERTICAL
+	lblPadding.Text = "Padding:"
+	lblPadding.TextSize = 16
+	Activity.AddView(lblPadding, 216dip, V.Height + 2dip, 105dip, 23dip)
+
+	'Adds the spinners
+	spAlignment.Initialize("Alignment")
+	spAlignment.Add("Bottom")
+	spAlignment.Add("Center")
+	spAlignment.Add("Left")
+	spAlignment.Add("Right")
+	spAlignment.Add("Top")
+	spAlignment.SelectedIndex = 1
+	spAlignment.TextSize = 16
+	Activity.AddView(spAlignment, 0, V.Height + 25dip, 105dip, 50dip)
+
+	spColumnSize.Initialize("ColumnSize")
+	spColumnSize.Add("Expand 1st")
+	spColumnSize.Add("Uniform")
+	spColumnSize.Add("Widget")
+	spColumnSize.SelectedIndex = 2
+	Activity.AddView(spColumnSize, 108dip, V.Height + 25dip, 105dip, 50dip)
+
+	spPadding.Initialize("Padding")
+	spPadding.Add("None")
+	spPadding.Add("Small")
+	spPadding.Add("Medium")
+	spPadding.Add("Large")
+	Activity.AddView(spPadding, 216dip, V.Height + 25dip, 105dip, 50dip)
+End Sub
+
+Sub Activity_Resume
+	'Informs LibGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs LibGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Adds a capture listener to the stage
+	Dim IL As lgScn2DInputListener
+	IL.Initialize("ST")
+	Stage.AddCaptureListener(IL)
+
+	'Loads the atlas
+	Atlas.InitializeWithFile("atlas/atlas.pack")
+
+	'Gets the font from the atlas
+	Dim AtlasRegion As lgTextureAtlasRegion = Atlas.FindRegion("font")
+	Font.Initialize4(lGdx.Files.internal("font/font.fnt"), AtlasRegion)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density)
+
+	'Loads the background image
+	BkgdTexture.Initialize("background.jpg")
+	Dim TextureRegion As lgTextureRegion
+	TextureRegion.InitializeWithTexture(BkgdTexture)
+	TiledBkgd.Initialize2(TextureRegion)
+
+	'Creates the table
+	Table.Initialize("")
+	Table.Background = TiledBkgd
+	Table.FillParent = True
+	Stage.AddActor(Table)
+
+	'Creates a few cells with text and images
+	Table.AddLabel2("Stars:", Font, Font.Color.ORANGE).AlignRight
+	For i = 1 To 4
+		Dim Star As lgScn2DImage
+		Star.InitializeWithDrawable(Atlas.CreateRegionDrawable("particle-star"), "")
+		Table.AddActor(Star)
+	Next
+	Table.NewRow
+	Table.AddLabel2("Logo:", Font, Font.Color.YELLOW).AlignRight
+	Dim Logo As lgScn2DImage
+	Logo.InitializeWithDrawable(Atlas.CreateRegionDrawable("b4a_logo"), "")
+	Table.AddCell.Width = 64
+	Table.AddActor(Logo).Colspan = 2
+	Table.NewRow
+	Dim Cell As lgScn2DTableCell
+	Cell = Table.AddLabel2("Click to toggle debug lines", Font, Font.Color.WHITE)
+	Cell.AlignCenter.Colspan = 5
+
+	'Activates the debug mode
+	Table.DebugAll
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the table
+	Stage.Draw
+	If DebugMode Then Table.DrawDebug(Stage)
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Atlas.dispose
+	BkgdTexture.dispose
+End Sub
+
+Sub Alignment_ItemClick(Position As Int, Value As Object)
+	'Changes the table alignment
+	Select Value
+		Case "Bottom": Table.Align = Table.ALIGN_Bottom
+		Case "Center": Table.Align = Table.ALIGN_Center
+		Case "Left":   Table.Align = Table.ALIGN_Left
+		Case "Right":  Table.Align = Table.ALIGN_Right
+		Case "Top":    Table.Align = Table.ALIGN_Top
+	End Select
+	Table.Invalidate
+End Sub
+
+Sub ColumnSize_ItemClick (Position As Int, Value As Object)
+	'Changes the column width of all cells
+	Dim L As List
+	Table.GetCellsList(L)
+	For i = 0 To L.Size - 1
+		Dim Cell As lgScn2DTableCell
+		Cell = L.Get(i)
+		Select Value
+			Case "Expand 1st":
+				If Cell.Column = 0 Then
+					Cell.ExpandX = 1
+				End If
+				Cell.UniformX = False
+			Case "Uniform":
+				Cell.ExpandX = 0
+				Cell.UniformX = True
+			Case "Widget":
+				Cell.ExpandX = 0
+				Cell.UniformX = False
+		End Select
+	Next
+	Table.Invalidate
+End Sub
+
+Sub Padding_ItemClick (Position As Int, Value As Object)
+	'Changes the padding of all cells
+	Dim L As List
+	Table.GetCellsList(L)
+	For i = 0 To L.Size - 1
+		Dim Cell As lgScn2DTableCell
+		Cell = L.Get(i)
+		Select Value
+			Case "None":   Cell.Pad(0)
+			Case "Small":  Cell.Pad(3dip)
+			Case "Medium": Cell.Pad(6dip)
+			Case "Large":  Cell.Pad(9dip)
+		End Select
+	Next
+	Table.Invalidate
+End Sub
+
+Sub ST_TouchDown(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	'Toggles the debug mode
+	DebugMode = Not(DebugMode)
+	Event.Handle
+End Sub

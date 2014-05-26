@@ -1,0 +1,85 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Test LibGDX
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'...
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho2(False, Width, Height)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates
+	LG_Update
+
+	'Draws
+	'...
+End Sub
+
+Sub LG_Update
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'...
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	'...
+End Sub

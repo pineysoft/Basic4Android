@@ -1,0 +1,178 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: Filters
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Stage As lgScn2DStage
+	Dim Table As lgScn2DTable
+	Dim TextureMM As lgTexture
+	Dim CurrentFilter As Object
+	Dim Atlas As lgTextureAtlas
+	Dim Font As lgBitmapFont
+	Dim SelectBox As lgScn2DSelectBox
+	Dim Images(6) As lgScn2DActor
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Creates the main table
+	Table.Initialize("")
+	Table.setPosition(0, 0)
+	Table.FillParent = True
+	Stage.AddActor(Table)
+
+	'Loads the texture (with mipmapping)
+	TextureMM.InitializeWithFile2(lGdx.Files.Internal("badlogic.jpg"), True)
+	CurrentFilter = TextureMM.FILTER_Nearest
+	TextureMM.SetFilter(CurrentFilter, CurrentFilter)
+
+	'Loads the atlas
+	Atlas.InitializeWithFile("atlas/uiskin.pack")
+
+	'Creates the ListBox style
+	Dim stylListBox As lgScn2DListStyle
+	Dim Region As lgTextureAtlasRegion = Atlas.FindRegion("arial22")
+	Font.Initialize4(lGdx.Files.internal("font/arial22.fnt"), Region)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density)
+	stylListBox.Initialize(Font, Font.Color.GREEN, Font.Color.WHITE, Atlas.CreateRegionDrawable("selection"))
+
+	'Creates the ScrollPane style
+	Dim stylScrollPane As lgScn2DScrollPaneStyle
+	Dim npPaneBkgd As lgScn2DNinePatchDrawable
+	npPaneBkgd.Initialize2(Atlas.Create9Patch("default-rect"))
+	npPaneBkgd.LeftWidth = 5dip
+	npPaneBkgd.RightWidth = 5dip
+	stylScrollPane.Initialize(npPaneBkgd, Null, Null, Null, Null)
+
+	'Creates the SelectBox style
+	Dim stylSelectBox As lgScn2DSelectBoxStyle
+	Dim npSelectBkgd As lgScn2DNinePatchDrawable
+	npSelectBkgd.Initialize2(Atlas.Create9Patch("default-select"))
+	npSelectBkgd.LeftWidth = 5dip
+	npSelectBkgd.RightWidth = npSelectBkgd.NinePatch.RightWidth + 5dip
+	stylSelectBox.Initialize(Font, Font.Color.YELLOW, npSelectBkgd, stylListBox, stylScrollPane)
+
+	'Adds the SelectBox
+	Dim Items(3) As String
+	Items(0) = " Nearest "
+	Items(1) = " Linear "
+	Items(2) = " MipMap "
+	SelectBox.Initialize(Items, stylSelectBox, "SB")
+	SelectBox.MaxListCount = Items.Length
+	Table.AddActor(SelectBox).AlignTop.Expand.Colspan = Images.Length - 1
+	Table.NewRow
+
+	'Adds the images
+	For i = 0 To Images.Length - 1
+		Images(i).Initialize("Image")
+		If i = Images.Length - 1 Then
+			'The last image is used for the stage background
+			Images(i).setSize(100%x, 100%y)
+			Stage.AddActor(Images(i))
+			Images(i).ZIndex = 0
+		Else
+			Images(i).setSize((i + 1) * 43, (i + 1) * 43)
+			Table.AddActor(Images(i))
+		End If		
+	Next
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Performs the actions and draws the stage
+	Stage.Act
+	Stage.Draw
+End Sub
+
+Sub Image_Draw(SpriteBatch As lgSpriteBatch, ParentAlpha As Float)
+	'Draws the texture with the actor size and position
+	Dim Image As lgScn2DActor = Sender
+	If Image = Images(Images.Length - 1) Then
+		'The background is dimmed
+		SpriteBatch.SetColorRGBA(0.4, 0.4, 0.4, 1)
+	End If
+	SpriteBatch.DrawTex2(TextureMM, Image.X, Image.Y, Image.Width, Image.Height)
+End Sub
+
+Sub SB_Changed(SelectedIndex As Int, SelectedItem As String)
+	'Changes the minification and magnification filters
+	Dim NewFilter As Object
+	Select SelectedItem
+		Case " Nearest "
+			NewFilter = TextureMM.FILTER_Nearest
+		Case " Linear "
+			NewFilter = TextureMM.FILTER_Linear
+		Case " MipMap "
+			NewFilter = TextureMM.FILTER_MipMap
+	End Select
+	If NewFilter <> CurrentFilter Then
+		CurrentFilter = NewFilter
+		If CurrentFilter = TextureMM.FILTER_MipMap Then
+			'Mipmapping for the magnification filter does not make sense
+			TextureMM.SetFilter(CurrentFilter, TextureMM.FILTER_Linear)
+		Else
+			TextureMM.SetFilter(CurrentFilter, CurrentFilter)
+		End If
+	End If
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes the resources
+	Stage.dispose
+	TextureMM.dispose
+	Atlas.dispose
+	Font.dispose
+End Sub

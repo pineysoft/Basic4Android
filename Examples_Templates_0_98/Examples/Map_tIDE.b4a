@@ -1,0 +1,122 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: tIDE tiled map
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim GD As lgGestureDetector
+	Dim Camera As lgOrthographicCamera
+	Dim InitialZoom As Float
+	Dim TiledMap As lgMapTiledMap
+	Dim Renderer As lgMapOrthogonalTiledMapRenderer
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes LibGDX
+	lGdx.Initialize("LG")
+
+	'Explains how to use this example
+	ToastMessageShow("Use your fingers to pan and zoom", True)
+End Sub
+
+Sub Activity_Resume
+	'Informs LibGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs LibGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the gesture detector (to move the camera)
+	GD.Initialize("GD")
+
+	'Loads the tiled map (tIDE format)
+	Dim tIDELoader As lgMaptIDEMapLoader
+	TiledMap = tIDELoader.Initialize2("maps/tide/Map01.tide")
+
+	'Repeats the background layers
+	Dim SkyLayer As lgMapTiledMapLayer = TiledMap.Layers.Get2("Background01")
+	SkyLayer.RepeatX = 15
+	Dim Layer02 As lgMapTiledMapLayer = TiledMap.Layers.Get2("Background02")
+	Layer02.RepeatX = 7
+	Dim Layer03 As lgMapTiledMapLayer = TiledMap.Layers.Get2("Background03")
+	Layer03.RepeatX = 3
+
+	'Initializes the renderer
+	Renderer.Initialize(TiledMap)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.55, 0.55, 0.55, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+	Renderer.SetCameraView(Camera)
+
+	'Draws the tiled map
+	Renderer.Render
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	TiledMap.dispose
+End Sub
+
+Sub GD_TouchDown(X As Float, Y As Float, Pointer As Int) As Boolean
+	'Gets the initial zoom of the camera
+	InitialZoom = Camera.Zoom
+	Return False
+End Sub
+
+Sub GD_Pan(X As Float, Y As Float, DeltaX As Float, DeltaY As Float) As Boolean
+	'Moves the camera
+	Camera.Translate(-DeltaX * Camera.Zoom, DeltaY * Camera.Zoom)
+	Return True
+End Sub
+
+Sub GD_Zoom(InitialDistance As Float, Distance As Float) As Boolean
+	'Zooms in/out
+	Camera.Zoom = InitialZoom * (InitialDistance / Distance)
+	Return True	
+End Sub

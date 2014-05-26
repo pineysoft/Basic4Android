@@ -1,0 +1,140 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=typSmiley
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Scissors
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: true
+#End Region
+
+Sub Process_Globals
+	Type typSmiley(X As Float, Y As Float, Color As lgColor)
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Batch As lgSpriteBatch
+	Dim Camera As lgOrthographicCamera
+	Dim ScissorStack As lgScissorStack
+	Dim Scissors As lgMathRectangle
+	Dim ClipBounds As lgMathRectangle
+	Dim ClipBdsValue, ClipBdsInc As Float
+	Dim texSmiley As lgTexture
+	Dim lstSmileys As List
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize
+
+	'Loads the smiley image (64x64)
+	texSmiley.Initialize("smiley.png")
+
+	'Creates the list of smileys
+	lstSmileys.Initialize
+	Dim MU As lgMathUtils
+	For i = 1 To 300
+		Dim Smiley As typSmiley
+		Smiley.Initialize
+		Smiley.X = Rnd(64dip * 0.5, lGdx.Graphics.Width - (64dip * 1.5))
+		Smiley.Y = Rnd(64dip * 0.5, lGdx.Graphics.Height - (64dip * 1.5))
+		Smiley.Color.setRGBA(MU.RandomFloat2(0.2, 1), MU.RandomFloat2(0.2, 1), MU.RandomFloat2(0.2, 1), 1)
+		lstSmileys.Add(Smiley)
+	Next
+
+	'Sets the initial value and the increment of ClipBounds
+	ClipBdsValue = 0.2
+	ClipBdsInc = 0.005
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub LG_Render
+	'Clears the screen and colors the background in blue
+	GL.glClearColor(0, 0, 0.4, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	'Draws the smileys (the rendering is limited to within the bounds of ClipBounds)
+	Batch.Begin
+	Dim X As Int = ClipBdsValue * lGdx.Graphics.Width
+	Dim Y As Int = ClipBdsValue * lGdx.Graphics.Height
+	ClipBounds.Set(X, Y, lGdx.Graphics.Width - (X * 2), lGdx.Graphics.Height - (Y * 2))
+	ScissorStack.CalculateScissors(Camera, 0, 0, Camera.ViewportWidth, Camera.ViewportHeight, Batch.TransformMatrix, ClipBounds, Scissors)
+	ScissorStack.PushScissors(Scissors)
+
+	Dim Smiley As typSmiley
+	For i = 0 To lstSmileys.Size - 1
+		Smiley = lstSmileys.Get(i)
+		Batch.Color = Smiley.Color
+		Batch.DrawTex2(texSmiley, Smiley.X, Smiley.Y, 64dip, 64dip)
+	Next
+
+	Batch.Flush
+	ScissorStack.PopScissors
+	Batch.End
+
+	'Increases/decreases the bounds
+	ClipBdsValue = ClipBdsValue + ClipBdsInc
+	If ClipBdsValue < 0.03 OR ClipBdsValue > 0.45 Then ClipBdsInc = -ClipBdsInc
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources used by lgTexture and lgSpriteBatch
+	texSmiley.dispose	
+	Batch.dispose
+End Sub

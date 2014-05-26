@@ -1,0 +1,245 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=typContact
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Collision Processing
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+	Type typContact(Body1 As lgBox2DBody, Body2 As lgBox2DBody)
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Renderer As lgBox2DDebugRenderer
+	Dim World As lgBox2DWorld
+	Dim bdyGround As lgBox2DBody
+	Dim lstContacts As List
+	Dim lstNuke As List
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Debug renderer
+	Renderer.Initialize2(True, False, False, True, False, True)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "Box2D")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground body
+	Dim eShape As lgBox2DEdgeShape
+	Dim V1, V2 As lgMathVector2
+	eShape.set(V1.set(-50, 0), V2.set(50, 0))
+
+	Dim fd As lgBox2DFixtureDef
+	fd.shape = eShape
+
+	Dim bd As lgBox2DBodyDef
+	bdyGround = World.CreateBody(bd)
+	bdyGround.createFixture(fd)
+	eShape.dispose
+
+	'Starting area
+	Dim xLo As Float = -5
+	Dim xHi As Float = 5
+	Dim yLo As Float = 2
+	Dim yHi As Float = 30
+
+	'Small triangle
+	Dim vertices(3) As lgMathVector2
+	vertices(0).set(-1, 0)
+	vertices(1).set(1, 0)
+	vertices(2).set(0, 2)
+
+	Dim polygon As lgBox2DPolygonShape
+	polygon.Set(vertices)
+
+	Dim triangleShapeDef As lgBox2DFixtureDef
+	triangleShapeDef.shape = polygon
+	triangleShapeDef.Density = 1
+
+	Dim MU As lgMathUtils
+	Dim triangleBodyDef As lgBox2DBodyDef
+	triangleBodyDef.Type = World.BODYTYPE_Dynamic
+	triangleBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body1 As lgBox2DBody = World.createBody(triangleBodyDef)
+	body1.createFixture(triangleShapeDef)
+
+	'Large triangle
+	vertices(0).scl(2)
+	vertices(1).scl(2)
+	vertices(2).scl(2)
+	polygon.Set(vertices)
+
+	triangleBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body2 As lgBox2DBody = World.createBody(triangleBodyDef)
+	body2.createFixture(triangleShapeDef)
+
+	'Small box
+	polygon.setAsBox(1, 0.5)
+
+	Dim boxShapeDef As lgBox2DFixtureDef
+	boxShapeDef.shape = polygon
+	boxShapeDef.Density = 1
+
+	Dim boxBodyDef As lgBox2DBodyDef
+	boxBodyDef.Type = World.BODYTYPE_Dynamic
+	boxBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body3 As lgBox2DBody = World.createBody(boxBodyDef)
+	body3.createFixture(boxShapeDef)
+
+	'Large box
+	polygon.setAsBox(2, 1)
+	boxBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body4 As lgBox2DBody = World.createBody(boxBodyDef)
+	body4.createFixture(boxShapeDef)
+	polygon.dispose
+
+	'Small circle
+	Dim circle As lgBox2DCircleShape
+	circle.Radius = 1
+
+	Dim circleShapeDef As lgBox2DFixtureDef
+	circleShapeDef.shape = circle
+	circleShapeDef.Density = 1
+
+	Dim circleBodyDef As lgBox2DBodyDef
+	circleBodyDef.Type = World.BODYTYPE_Dynamic
+	circleBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body5 As lgBox2DBody = World.createBody(circleBodyDef)
+	body5.createFixture(circleShapeDef)
+
+	'Large circle
+	circle.Radius = circle.Radius * 2
+	circleBodyDef.position.set(MU.RandomFloat2(xLo, xHi), MU.RandomFloat2(yLo, yHi))
+
+	Dim body6 As lgBox2DBody = World.createBody(circleBodyDef)
+	body6.createFixture(circleShapeDef)
+	circle.dispose
+
+	'List of contacts
+	lstContacts.Initialize
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	Camera.Initialize2(Width / 20, Height / 20)
+	Camera.Position.set(0, Height / 50, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the simulation
+	LG_Update
+	Renderer.render(World.InternalObject, Camera.Combined)
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+
+	'Some bodies are going to be destroyed according to the contact list.
+	'The bodies to destroy have to be buffered because they may be involved in multiple contacts.
+	lstNuke.Initialize
+
+	'Traverses the contact results and destroys bodies that are touching heavier bodies
+	For i = 0 To lstContacts.size - 1
+		Dim C As typContact = lstContacts.Get(i)
+		If C.Body2.Mass > C.Body1.Mass Then
+			If Not(List_Contains(C.Body1)) Then lstNuke.Add(C.Body1)
+		Else
+			If Not(List_Contains(C.Body2)) Then lstNuke.Add(C.Body2)
+		End If
+	Next
+
+	'Destroys the bodies
+	For i = 0 To lstNuke.Size - 1
+		Dim b As lgBox2DBody = lstNuke.Get(i)
+		World.DestroyBody(b)
+	Next
+
+	'Clears the list of contacts
+	lstContacts.Clear
+End Sub
+
+Sub List_Contains(Body As lgBox2DBody) As Boolean
+	For Each b As lgBox2DBody In lstNuke
+		If b = Body Then Return True
+	Next
+	Return False
+End Sub
+
+Sub Box2D_BeginContact(Contact As lgBox2DContact)
+	'The ground is discarded
+	If Contact.FixtureA.Body <> bdyGround AND Contact.FixtureB.Body <> bdyGround Then
+		'The Contact instance is going to be reused, so its data have to be copied
+		Dim thisContact As typContact
+		thisContact.Body1 = Contact.FixtureA.Body
+		thisContact.Body2 = Contact.FixtureB.Body
+		lstContacts.Add(thisContact)
+	End If
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	World.dispose
+End Sub

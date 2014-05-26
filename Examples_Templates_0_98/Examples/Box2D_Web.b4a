@@ -1,0 +1,329 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGdx Box2D Web
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim IP As lgInputProcessor
+	Dim Font As lgBitmapFont
+	Dim FontCache As lgBitmapFontCache
+	Dim World As lgBox2DWorld
+	Dim Renderer As lgBox2DDebugRenderer
+	Dim m_GroundBody As lgBox2DBody
+	Dim m_Bodies(4) As lgBox2DBody
+	Dim m_Joints(8) As Object
+	Dim m_FingerJoint As Object
+	Dim m_TouchedFixture As lgBox2DFixture
+	Dim m_QueryCallback As lgBox2DQueryCallback
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Input processor
+	IP.Initialize("LG")
+
+	'Renderers
+	Batch.Initialize 'For text
+	Renderer.Initialize2(True, True, False, False, False, False)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground
+	Dim bd As lgBox2DBodyDef
+	m_GroundBody = World.CreateBody(bd)
+
+	Dim eShape As lgBox2DEdgeShape
+	Dim V1, V2 As lgMathVector2
+	eShape.Set(V1.Set(-40, 0), V2.Set(40, 0))
+	m_GroundBody.CreateFixture2(eShape, 0)
+	eShape.dispose
+
+	'Boxes
+	Dim pShape As lgBox2DPolygonShape
+	pShape.SetAsBox(0.5, 0.5)
+
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+
+	bd.Position.Set(-5, 5)
+	m_Bodies(0) = World.CreateBody(bd)
+	m_Bodies(0).CreateFixture2(pShape, 5)
+
+	bd.Position.Set(5, 5)
+	m_Bodies(1) = World.CreateBody(bd)
+	m_Bodies(1).CreateFixture2(pShape, 5)
+
+	bd.Position.Set(5, 15)
+	m_Bodies(2) = World.CreateBody(bd)
+	m_Bodies(2).CreateFixture2(pShape, 5)
+
+	bd.Position.Set(-5, 15)
+	m_Bodies(3) = World.CreateBody(bd)
+	m_Bodies(3).CreateFixture2(pShape, 5)
+
+	pShape.dispose
+
+	'Joints
+	Dim jd As lgBox2DDistanceJointDef
+	Dim p1, p2, d As lgMathVector2
+
+	jd.frequencyHz = 4
+	jd.dampingRatio = 0.5
+
+	jd.bodyA = m_GroundBody
+	jd.bodyB = m_Bodies(0)
+	jd.localAnchorA.set(-10, 0)
+	jd.localAnchorB.set(-0.5, -0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(0) = World.CreateJoint(jd)
+
+	jd.bodyA = m_GroundBody
+	jd.bodyB = m_Bodies(1)
+	jd.localAnchorA.set(10, 0)
+	jd.localAnchorB.set(0.5, -0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(1) = World.CreateJoint(jd)
+
+	jd.bodyA = m_GroundBody
+	jd.bodyB = m_Bodies(2)
+	jd.localAnchorA.set(10, 20)
+	jd.localAnchorB.set(0.5, 0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(2) = World.CreateJoint(jd)
+
+	jd.bodyA = m_GroundBody
+	jd.bodyB = m_Bodies(3)
+	jd.localAnchorA.set(-10, 20)
+	jd.localAnchorB.set(-0.5, 0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(3) = World.CreateJoint(jd)
+
+	jd.bodyA = m_Bodies(0)
+	jd.bodyB = m_Bodies(1)
+	jd.localAnchorA.set(0.5, 0)
+	jd.localAnchorB.set(-0.5, 0)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(4) = World.CreateJoint(jd)
+
+	jd.bodyA = m_Bodies(1)
+	jd.bodyB = m_Bodies(2)
+	jd.localAnchorA.set(0, 0.5)
+	jd.localAnchorB.set(0, -0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(5) = World.CreateJoint(jd)
+
+	jd.bodyA = m_Bodies(2)
+	jd.bodyB = m_Bodies(3)
+	jd.localAnchorA.set(-0.5, 0)
+	jd.localAnchorB.set(0.5, 0)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(6) = World.CreateJoint(jd)
+
+	jd.bodyA = m_Bodies(3)
+	jd.bodyB = m_Bodies(0)
+	jd.localAnchorA.set(0, -0.5)
+	jd.localAnchorB.set(0, 0.5)
+	p1 = jd.bodyA.getWorldPoint(jd.localAnchorA)
+	p2 = jd.bodyB.getWorldPoint(jd.localAnchorB)
+	d = p2.Sub(p1)
+	jd.length = d.len
+	m_Joints(7) = World.CreateJoint(jd)
+
+	'Query callback
+	m_QueryCallback.Initialize("World_ReportFixture")
+	m_TouchedFixture = Null
+
+	'Joint created with finger
+	m_FingerJoint = Null
+
+	'Default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(1.5 * Density)
+
+	'Font cache
+	FontCache.Initialize(Font)
+	FontCache.Color = FontCache.Color.WHITE
+	FontCache.SetText("Move the pink boxes with your finger", 0, lGdx.Graphics.Height)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	If Width > Height Then
+		Camera.Initialize2(20 * Width / Height, 20)
+	Else
+		Camera.Initialize2(20, 20 * Height / Width)
+	End If
+	Camera.Position.Set(0, 9, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the simulation
+	LG_Update
+	Renderer.Render(World.InternalObject, Camera.Combined)
+
+	'Sets the coordinate system for the text
+	Batch.ProjectionMatrix.setToOrtho2D(0, 0, lGdx.Graphics.Width, lGdx.Graphics.Height)
+
+	'Draws the text in the top left corner
+	Batch.Begin
+	FontCache.Draw(Batch)
+	Batch.End
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Font.dispose
+	Batch.dispose
+	Renderer.dispose
+	World.dispose
+End Sub
+
+Sub FromScreenToWorld(ScreenX As Int, ScreenY As Int) As lgMathVector2
+	'Translates the screen coordinates into viewport/world coordinates
+	Dim Coord As lgMathVector2
+	Coord.Set(ScreenX, ScreenY)
+	Camera.Unproject(Coord)
+	Return Coord
+End Sub
+
+Sub LG_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If m_FingerJoint <> Null Then Return True
+
+	'Translates the touch coordinates and searches a fixture in the touched area
+	Dim p As lgMathVector2 = FromScreenToWorld(ScreenX, ScreenY)
+	m_TouchedFixture = Null
+	World.QueryAABB(m_QueryCallback, p.x - 0.5, p.y - 0.5, p.x + 0.5, p.y + 0.5)
+	If m_TouchedFixture <> Null Then
+		'Creates a "finger" joint
+		Dim body As lgBox2DBody = m_TouchedFixture.body
+		Dim mjdef As lgBox2DMouseJointDef
+		mjdef.bodyA = m_GroundBody
+		mjdef.bodyB = body
+		mjdef.Target.Set2(body.WorldCenter)
+		mjdef.maxForce = 1000 * body.Mass
+		m_FingerJoint = World.CreateJoint(mjdef)
+		body.Awake = True
+		Return True
+	End If
+	Return False
+End Sub
+
+Sub LG_TouchDragged(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If m_FingerJoint <> Null Then
+		'Updates the "finger" joint
+		Dim MJ As lgBox2DMouseJoint = m_FingerJoint
+		MJ.Target = FromScreenToWorld(ScreenX, ScreenY)
+		Return True
+	End If
+	Return False
+End Sub
+
+Sub LG_TouchUp(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If m_FingerJoint <> Null Then
+		'Destroys the "finger" joint
+		Dim MJ As lgBox2DMouseJoint = m_FingerJoint
+		World.DestroyJoint(MJ)
+		m_FingerJoint = Null
+		Return True
+	End If
+	Return False
+End Sub
+
+Sub World_ReportFixture(Fixture As lgBox2DFixture) As Boolean
+	'This fixture is in the touched area
+	Dim body As lgBox2DBody = Fixture.body
+	If body <> m_GroundBody Then
+		m_TouchedFixture = Fixture
+		Return False 'Stops the query
+	End If
+	Return True
+End Sub

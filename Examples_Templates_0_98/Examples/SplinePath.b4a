@@ -1,0 +1,190 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Spline Path
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim ShRdr As lgShapeRenderer
+	Dim texSmiley As lgTexture
+	Dim B As lgMathBSpline
+	Dim CRS As lgMathCatmullRomSpline
+	Dim V, NextV As lgMathVector2
+	Dim Offset, Pos, SmileyPos As Float
+	Dim SAMPLE_POINTS As Int = 200
+	Dim SAMPLE_POINT_DISTANCE As Float = 1/SAMPLE_POINTS
+	Dim Interpolation As lgMathInterpolation
+	Dim Spline As Int '0=Catmull-Rom spline, 1=B-spline
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the renderers
+	Batch.Initialize
+	ShRdr.Initialize
+
+	'Loads the smiley image (64x64)
+	texSmiley.Initialize("smiley.png")
+	Offset = texSmiley.Width / 2
+
+	'Creates a Catmull-Rom spline with 8 control points
+	Dim W As Int = lGdx.Graphics.Width - texSmiley.Width
+	Dim H As Int = lGdx.Graphics.Height - texSmiley.Height
+	Dim Cp(8) As lgMathVector2
+	Cp(0).set(0, 0)
+	Cp(1).set(W * 0.25, H * 0.5)
+	Cp(2).set(0, H)
+	Cp(3).set(W * 0.5, H * 0.75)
+	Cp(4).set(W, H)
+	Cp(5).set(W * 0.75, H * 0.5)
+	Cp(6).set(W, 0)
+	Cp(7).set(W * 0.5, H * 0.25)
+	CRS.Initialize(Cp, True)
+
+	'Creates a B-spline with the same control points
+	B.Initialize(Cp, 3, True)
+
+	'Selects an interpolator
+	Interpolation = Interpolation.exp5
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho2(False, Width, Height)
+End Sub
+
+Sub CalcCoord(CoordV As lgMathVector2, Position As Float)
+	'Returns the coordinates of the given position in CoordV
+	If Spline = 0 Then
+		CRS.ValueAt(CoordV, Position)
+	Else
+		B.ValueAt(CoordV, Position)
+	End If
+	CoordV.Add2(Offset, Offset)
+End Sub
+
+Sub DrawControlPoints(Cp() As lgMathVector2)
+	'Draws the given control points
+	For i = 0 To Cp.Length - 1
+		ShRdr.Circle(Cp(i).X + Offset, Cp(i).Y + Offset, 5dip)
+	Next
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.8, 0.8, 0.8, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+	Batch.ProjectionMatrix = Camera.Combined
+	ShRdr.ProjectionMatrix = Camera.Combined
+
+	'Adds a control point where the screen is touched
+	If lGdx.Input.justTouched Then
+		Dim VTouch As lgMathVector2
+		VTouch.Set(lGdx.Input.X - Offset, lGdx.Graphics.Height - lGdx.Input.Y - Offset)
+		Dim Cp As lgArray
+		If Spline = 0 Then
+			Cp.InitializeWithArray(CRS.ControlPoints)
+			Cp.Insert(CRS.Nearest(VTouch), VTouch)
+			CRS.ControlPoints = Cp.toArray
+		Else
+			Cp.InitializeWithArray(B.ControlPoints)
+			Cp.Insert(B.Nearest(VTouch), VTouch)
+			B.ControlPoints = Cp.toArray
+		End If
+	End If
+
+	'Draws the spline
+	ShRdr.Begin(ShRdr.SHAPETYPE_Line)
+	ShRdr.SetColorRGBA(0, 0, 0, 1) 'Black
+	CalcCoord(V, 0)
+	Pos = SAMPLE_POINT_DISTANCE
+	Do While Pos <= 1
+		CalcCoord(NextV, Pos)
+		ShRdr.Line3(V, NextV)
+		V = NextV.Cpy
+		Pos = Pos + SAMPLE_POINT_DISTANCE
+	Loop
+	CalcCoord(NextV, 0)
+	ShRdr.Line3(V, NextV)
+	ShRdr.End
+
+	'Draws the control points
+	ShRdr.Begin(ShRdr.SHAPETYPE_Filled)
+	ShRdr.SetColorRGBA(0, 0, 1, 1) 'Blue
+	If Spline = 0 Then
+		DrawControlPoints(CRS.ControlPoints)
+	Else
+		DrawControlPoints(B.ControlPoints)
+	End If
+	ShRdr.End
+
+	'Moves the smiley along the spline
+	Batch.Begin
+	If Spline = 0 Then
+		CRS.ValueAt(V, Interpolation.Apply(SmileyPos))
+	Else
+		B.ValueAt(V, Interpolation.Apply(SmileyPos))
+	End If
+	Batch.DrawTex(texSmiley, V.X, V.Y)
+	SmileyPos = SmileyPos + lGdx.Graphics.DeltaTime / 10
+	If SmileyPos > 1 Then
+		SmileyPos = 0
+		Spline = 1 - Spline 'Alternates between the two splines
+	End If
+	Batch.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	texSmiley.dispose
+	Batch.dispose
+	ShRdr.dispose
+End Sub

@@ -1,0 +1,40 @@
+
+dragdrop.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+house
+  rotate: false
+  xy: 1, 149
+  size: 292, 317
+  orig: 350, 350
+  offset: 29, 25
+  index: -1
+family
+  rotate: false
+  xy: 295, 169
+  size: 231, 297
+  orig: 231, 297
+  offset: 0, 0
+  index: -1
+doghouse
+  rotate: false
+  xy: 528, 232
+  size: 230, 234
+  orig: 230, 234
+  offset: 0, 0
+  index: -1
+dog
+  rotate: false
+  xy: 1, 1
+  size: 180, 146
+  orig: 180, 146
+  offset: 0, 0
+  index: -1
+cat
+  rotate: false
+  xy: 760, 358
+  size: 100, 108
+  orig: 100, 108
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,233 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: MultiScreen
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+	Dim LastScreen As Int = 0
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim LG_Input As lgInputProcessor
+
+	Dim LGSM As lgScreenManager
+	Dim LG_Screen(2) As lgScreen
+
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim Texture As lgTexture
+	Dim Region As lgTextureRegion
+	Dim Sprite As lgSprite
+	Dim Font As lgBitmapFont
+	Dim TextHeight, TextWidth As Int
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.Color = Colors.Blue
+
+	'Adds the libGDX surface to the activity
+	Dim V As View = lGdx.InitializeView("LG")
+	Activity.AddView(V, 10%x, 10%y, 80%x, 80%y)
+	Log("Initialized = " & V.IsInitialized)
+	lGdx.LogLevel = lGdx.LOGLEVEL_Debug
+
+	'Adds a label
+	Dim lbl As Label
+	lbl.Initialize("")
+	lbl.Gravity = Gravity.CENTER_HORIZONTAL
+	lbl.Text = "Touch the libGDX view to alternate its screens"
+	lbl.TextColor = Colors.White
+	lbl.TextSize = 18
+	Activity.AddView(lbl, 5%x, 92%y, 90%x, 20dip)
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the InputProcessor for touch events
+	LG_Input.Initialize("LG")
+
+	'Creates two screens
+	LGSM.Initialize(lGdx)
+	LG_Screen(0) = LGSM.AddScreen("LGS1")
+	LG_Screen(1) = LGSM.AddScreen("LGS2")
+	LGSM.CurrentScreen = LG_Screen(LastScreen)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+End Sub
+
+Sub LG_KeyDown(KeyCode As Int) As Boolean
+	Return False
+End Sub
+
+Sub LG_KeyUp(KeyCode As Int) As Boolean
+	Return False
+End Sub
+
+Sub LG_KeyTyped(Character As Char) As Boolean
+	Return False
+End Sub
+
+Sub LG_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub LG_TouchUp(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	'Changes the current screen
+	If LGSM.CurrentScreen = LG_Screen(1) Then
+		LGSM.CurrentScreen = LG_Screen(0)
+	Else
+		LGSM.CurrentScreen = LG_Screen(1)
+	End If
+	Return True
+End Sub
+
+Sub LG_TouchDragged(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+#Region Screen 1
+'-------------------------------------------------------------------------------------
+' SCREEN 1
+'-------------------------------------------------------------------------------------
+Sub LGS1_Show
+	Log("1 show")
+	LastScreen = 0
+
+	Batch.Initialize
+
+	Texture.Initialize("libgdx.png")
+	Texture.SetFilter(Texture.FILTER_Linear, Texture.FILTER_Linear)
+	Region.InitializeWithTexture2(Texture, 512, 275)
+	Sprite.InitializeWithRegion(Region)
+	Sprite.SetSize(0.9, 0.9 * Sprite.Height / Sprite.Width)
+	Sprite.SetOrigin(Sprite.Width / 2, Sprite.Height / 2)
+	Sprite.SetPosition(-Sprite.Width / 2, -Sprite.Height / 2)
+End Sub
+
+Sub LGS1_Resize(Width As Int, Height As Int)
+	Log("1 resize")
+
+	'Sets the camera viewport
+	Camera.Initialize2(1, Height / Width)
+End Sub
+
+Sub LGS1_Render(Delta As Float)
+'	Log("1 render " & Delta)
+	GL.glClearColor(1, 1, 1, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	Batch.ProjectionMatrix = Camera.Combined
+	Batch.Begin
+	Sprite.Draw(Batch)
+	Batch.End
+End Sub
+
+Sub LGS1_Pause
+	Log("1 pause")
+End Sub
+
+Sub LGS1_Resume
+	Log("1 resume")
+End Sub
+
+Sub LGS1_Hide
+	Log("1 hide")
+	Texture.dispose
+	Batch.dispose
+	Log("1 disposed")
+End Sub
+#End Region
+
+#Region Screen 2
+'-------------------------------------------------------------------------------------
+' SCREEN 2
+'-------------------------------------------------------------------------------------
+Sub LGS2_Show
+	Log("2 show")
+	LastScreen = 1
+
+	Batch.Initialize
+
+	Dim FG As lgFontGenerator
+	Font = FG.CreateFont("font/liquidcrystal.otf", 48 * Density, "2nd scre")
+	Font.SetColorRGBA(0, 0, 1, 1) 'Blue
+	TextHeight = Font.GetBounds("2nd screen").Height
+	TextWidth = Font.GetBounds("2nd screen").Width
+End Sub
+
+Sub LGS2_Resize(Width As Int, Height As Int)
+	Log("2 resize")
+
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub LGS2_Render(Delta As Float)
+'	Log("2 render " & Delta)
+	GL.glClearColor(0.5, 0.8, 0.6, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	Batch.ProjectionMatrix = Camera.Combined
+	Batch.Begin
+	Font.Draw(Batch, "2nd screen", (Camera.ViewportWidth - TextWidth) / 2, (Camera.ViewportHeight + TextHeight) / 2)
+	Batch.End
+End Sub
+
+Sub LGS2_Pause
+	Log("2 pause")
+End Sub
+
+Sub LGS2_Resume
+	Log("2 resume")
+End Sub
+
+Sub LGS2_Hide
+	Log("2 hide")
+	Font.dispose
+	Batch.dispose
+	Log("2 disposed")
+End Sub
+#End Region

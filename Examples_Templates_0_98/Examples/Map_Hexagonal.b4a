@@ -1,0 +1,128 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: Hexagonal map
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim GD As lgGestureDetector
+	Dim Camera As lgOrthographicCamera
+	Dim Hexture As lgTexture
+	Dim TiledMap As lgMapTiledMap
+	Dim Renderer As lgMapHexagonalTiledMapRenderer
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the gesture detector (to move the camera)
+	GD.Initialize("GD")
+
+	'Loads the hexagons
+	Hexture.Initialize("maps/hexes.png")
+	Dim HexRegion As lgTextureRegion
+	HexRegion.InitializeWithTexture(Hexture)
+	Dim HexRegions(,) As lgTextureRegion = HexRegion.Split(112, 97)
+
+	'Creates the hexagonal tiles
+	Dim Tiles(3) As lgMapStaticTiledMapTile
+	Tiles(0).Initialize(HexRegions(0, 0))
+	Tiles(1).Initialize(HexRegions(0, 1))
+	Tiles(2).Initialize(HexRegions(1, 0))
+
+	'Populates a layer with tiles
+	Dim Layer As lgMapTiledMapLayer
+	Layer.Initialize(45, 30, 112, 97)
+	For Y = 0 To 29
+		For X = 0 To 44
+			Dim Cell As lgMapTiledMapLayerCell
+			Cell.Tile = Tiles(Rnd(0, 3))
+			Layer.setCell(X, Y, Cell)
+		Next
+	Next
+	TiledMap.Layers.add(Layer)
+
+	'Repeats the tiles 5 times horizontally and vertically
+	Layer.RepeatX = 5
+	Layer.RepeatY = 5
+
+	'Initializes the renderer
+	Renderer.Initialize3(TiledMap, 1/3)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	If Width > Height Then
+		Camera.SetToOrtho2(False, (Width / Height) * 480, 480)
+	Else
+		Camera.SetToOrtho2(False, 480, (Height / Width) * 480)
+	End If
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.55, 0.55, 0.55, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+	Renderer.SetCameraView(Camera)
+
+	'Draws the tiled map
+	Renderer.Render
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	TiledMap.dispose
+	Hexture.dispose
+End Sub
+
+Sub GD_Pan(X As Float, Y As Float, DeltaX As Float, DeltaY As Float) As Boolean
+	'Moves the camera
+	Camera.Translate(-DeltaX, DeltaY)
+	Return True
+End Sub

@@ -1,0 +1,147 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=typCaveman
+NumberOfFiles=0
+NumberOfLibraries=3
+Library1=core
+Library2=libgdx
+Library3=reflection
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: lGDX Animation
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+	Type typCaveman(Pos As lgMathVector2, HeadLeft As Boolean, StateTime As Float)
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim Texture As lgTexture
+	Dim Cavemen(100) As typCaveman
+	Dim LeftWalk As lgAnimation
+	Dim RightWalk As lgAnimation
+	Dim CavemanSize As Int = 64
+	Dim Velocity As Int = 20
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub GetRegionArray(MultiDimArray As Object, Index As Int) As lgTextureRegion()
+	Dim r As Reflector
+	r.Target = MultiDimArray
+	Return r.GetArray(Array As Int(Index))
+End Sub
+
+Sub LG_Create
+	'Initializes the renderer
+	Batch.Initialize
+
+	'Splits the caveman texture into 4 walking frames
+	Texture.Initialize("walkanim.png")
+	Dim Region As lgTextureRegion
+	Region.InitializeWithTexture(Texture)
+	Dim WalkFrames(,) As lgTextureRegion = Region.Split(CavemanSize, CavemanSize)
+	Dim LeftWalkFrames() As lgTextureRegion = GetRegionArray(WalkFrames, 0)
+	Dim RightWalkFrames(LeftWalkFrames.Length) As lgTextureRegion
+	For i = 0 To RightWalkFrames.Length - 1
+		Dim Frame As lgTextureRegion
+		Frame.InitializeWithRegion(LeftWalkFrames(i))
+		Frame.Flip(True, False)
+		RightWalkFrames(i) = Frame
+	Next
+
+	'Initializes the animations
+	LeftWalk.Initialize(0.25, LeftWalkFrames)
+	RightWalk.Initialize(0.25, RightWalkFrames)
+
+	'Initializes the position and direction of cavemen
+	Dim MU As lgMathUtils
+	For i = 0 To Cavemen.Length - 1
+		Cavemen(i).Initialize
+		Cavemen(i).Pos.set(Rnd(-CavemanSize, lGdx.Graphics.Width), Rnd(0, lGdx.Graphics.Height - CavemanSize))
+		Cavemen(i).HeadLeft = (Rnd(0, 2) = 0)
+		Cavemen(i).StateTime = MU.RandomFloat
+	Next
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	'Updates the position of cavemen
+	Dim DeltaTime As Float = lGdx.Graphics.DeltaTime
+	For i = 0 To Cavemen.Length - 1
+		Cavemen(i).StateTime = Cavemen(i).StateTime + DeltaTime
+		If Cavemen(i).HeadLeft Then
+			Cavemen(i).pos.x = Cavemen(i).pos.x - (Velocity * DeltaTime)
+		Else
+			Cavemen(i).pos.x = Cavemen(i).pos.x + (Velocity * DeltaTime)
+		End If
+		If Cavemen(i).pos.x < -CavemanSize Then Cavemen(i).pos.x = lGdx.Graphics.Width
+		If Cavemen(i).pos.x > lGdx.Graphics.Width Then Cavemen(i).pos.x = -CavemanSize
+	Next
+
+	'Animates the cavemen
+	Batch.Begin
+	For i = 0 To Cavemen.Length - 1
+		Dim Frame As lgTextureRegion
+		If Cavemen(i).HeadLeft Then
+			Frame = LeftWalk.GetKeyFrame2(Cavemen(i).StateTime, True)
+		Else
+			Frame = RightWalk.GetKeyFrame2(Cavemen(i).StateTime, True)
+		End If
+		Batch.DrawRegion(Frame, Cavemen(i).pos.x, Cavemen(i).pos.y)
+	Next
+	Batch.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	Texture.dispose
+	Batch.dispose
+End Sub

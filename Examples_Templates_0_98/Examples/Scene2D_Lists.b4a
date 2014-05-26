@@ -1,0 +1,177 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Lists
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Atlas As lgTextureAtlas
+	Dim Font As lgBitmapFont
+	Dim Stage As lgScn2DStage
+
+	Dim ScrollPane As lgScn2DScrollPane
+	Dim stylScrollPane As lgScn2DScrollPaneStyle
+
+	Dim ListBox As lgScn2DList
+	Dim rdSelection As lgScn2DTextureRegionDrawable
+	Dim Items(50) As String
+	Dim stylListBox As lgScn2DListStyle
+
+	Dim SelectBox(3) As lgScn2DSelectBox
+	Dim stylSelectBox As lgScn2DSelectBoxStyle
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the atlas
+	Atlas.InitializeWithFile("atlas/uiskin.pack")
+
+	'Gets the font from the atlas
+	Dim Region As lgTextureAtlasRegion = Atlas.FindRegion("arial22")
+	Font.Initialize4(lGdx.Files.internal("font/arial22.fnt"), Region)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.1)
+
+	'Gets the selection from the atlas
+	rdSelection = Atlas.CreateRegionDrawable("selection")
+
+	'Creates the items
+	For i = 0 To 49
+		Items(i) = "Item #" & i
+	Next
+
+	'Creates the list box
+	stylListBox.Initialize(Font, Font.Color.GREEN, Font.Color.WHITE, rdSelection)
+	ListBox.Initialize(Items, stylListBox, "List")
+
+	'Gets the ScrollPane's background from the atlas
+	Dim npPaneBkgd As lgScn2DNinePatchDrawable
+	npPaneBkgd.Initialize2(Atlas.Create9Patch("default-rect"))
+	npPaneBkgd.LeftWidth = 4dip
+	npPaneBkgd.RightWidth = 4dip
+
+	'Gets the scrollbars from the atlas
+	Dim npPaneScroll As lgScn2DNinePatchDrawable
+	npPaneScroll.Initialize2(Atlas.Create9Patch("default-scroll"))
+	Dim npPaneKnob As lgScn2DNinePatchDrawable
+	npPaneKnob.Initialize2(Atlas.Create9Patch("default-round-large"))
+
+	'Creates the ScrollPane's style
+	stylScrollPane.Initialize(npPaneBkgd, npPaneScroll, npPaneKnob, npPaneScroll, npPaneKnob)
+	stylScrollPane.SetScrollbarWidth(30dip)
+
+	'Creates and places the ScrollPane
+	ScrollPane.Initialize(ListBox, stylScrollPane, "SP")
+	ScrollPane.X = lGdx.Graphics.Width
+	ScrollPane.Y = 5dip
+	ScrollPane.Width = 150dip
+	ScrollPane.Height = lGdx.Graphics.Height - 10dip
+	Stage.AddActor(ScrollPane)
+
+	'The ScrollPane is animated towards the left side
+	Dim Actions As lgScn2DActions
+	Dim Interpolation As lgMathInterpolation
+	ScrollPane.AddAction(Actions.MoveTo3(5dip, ScrollPane.Y, 1, Interpolation.bounceOut))
+
+	'Gets the SelectBox's background from the atlas
+	Dim npSelectBkgd As lgScn2DNinePatchDrawable
+	npSelectBkgd.Initialize2(Atlas.Create9Patch("default-select"))
+	npSelectBkgd.LeftWidth = 4dip
+	npSelectBkgd.RightWidth = npSelectBkgd.NinePatch.RightWidth + 4dip
+
+	'Creates the SelectBox's style
+	stylSelectBox.Initialize(Font, Font.Color.YELLOW, npSelectBkgd, stylListBox, stylScrollPane)
+	stylSelectBox.BackgroundDisabled = stylSelectBox.Background
+	stylSelectBox.DisabledFontColor = Font.Color.LIGHT_GRAY
+
+	'Creates and places the SelectBoxes
+	For i = 0 To SelectBox.Length - 1
+		SelectBox(i).Initialize(Items, stylSelectBox, "SelBox")
+		SelectBox(i).Name = "SB" & i
+		SelectBox(i).X = 160dip
+		SelectBox(i).Width = 150dip
+		SelectBox(i).Y = lGdx.Graphics.Height - 120dip - (i * 60dip)
+		SelectBox(i).SelectedIndex = i
+		Stage.AddActor(SelectBox(i))
+	Next
+	SelectBox(0).MaxListCount = 7
+	SelectBox(2).Disabled = True
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.45, 0.45, 0.7, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the lists
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Atlas.dispose
+End Sub
+
+Sub List_Changed(SelectedIndex As Int, SelectedItem As String)
+	Log("List Index=" & SelectedIndex & " / " & SelectedItem)
+End Sub
+
+Sub SelBox_Changed(SelectedIndex As Int, SelectedItem As String)
+	Dim SB As lgScn2DSelectBox = Sender
+	Log(SB.Name & " Index=" & SelectedIndex & " / " & SelectedItem)
+End Sub

@@ -1,0 +1,162 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Shape Renderer
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgPerspectiveCamera
+	Dim IP As lgInputProcessor
+	Dim ShRdr As lgShapeRenderer
+	Dim Colour As lgColor
+	Dim LastX As Float
+	Dim Point, Y_Axis As lgMathVector3
+	Dim RotMatrix As lgMathMatrix4
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+
+	'Displays a line of help
+	ToastMessageShow("You can rotate the shapes on the Y axis with your finger.", True)
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the shape renderer
+	ShRdr.Initialize
+
+	'Initializes the input processor
+	IP.Initialize("IP")
+
+	'Initializes the vector of the rotation axis
+	Y_Axis.Set(0, 1, 0)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Initializes the viewport and the camera position
+	Camera.Initialize2(60, Width, Height)
+	Camera.Position.set(0, 0, 2)
+	Camera.Near = 0.1
+
+	'Applies an initial rotation of 30 degrees to the rendered shapes
+	ShRdr.Identity
+	ShRdr.Rotate(0, 1, 0, 30)
+	ShRdr.Translate(-0.5, -0.4, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(Bit.OR(GL.GL10_COLOR_BUFFER_BIT, GL.GL10_DEPTH_BUFFER_BIT))
+
+	'Updates the matrices
+	Camera.Update
+	ShRdr.ProjectionMatrix = Camera.Combined
+
+	'Draws a red rectangle
+	ShRdr.Begin(ShRdr.SHAPETYPE_Filled)
+		ShRdr.Color = Colour.RED
+		ShRdr.Rect(0, 0, 1, 1)
+	ShRdr.End
+	ShRdr.Begin(ShRdr.SHAPETYPE_Line)
+		ShRdr.Color = Colour.WHITE
+		ShRdr.Rect(0, 0, 1, 1)
+	ShRdr.End
+
+	'Draws a blue circle
+	ShRdr.Begin(ShRdr.SHAPETYPE_Filled)
+		ShRdr.Color = Colour.BLUE
+		ShRdr.Circle2(0.2, 0.2, 0.5, 40)
+	ShRdr.End
+	ShRdr.Begin(ShRdr.SHAPETYPE_Line)
+		ShRdr.Color = Colour.WHITE
+		ShRdr.Circle2(0.2, 0.2, 0.5, 40)
+	ShRdr.End
+
+	'Draws a pink triangle
+	ShRdr.Begin(ShRdr.SHAPETYPE_Filled)
+		ShRdr.Color = Colour.MAGENTA
+		ShRdr.Triangle(-0.1, 0.1, -0.6, -0.1, -0.3, 0.5)
+	ShRdr.End
+	ShRdr.Begin(ShRdr.SHAPETYPE_Line)
+		ShRdr.Color = Colour.WHITE
+		ShRdr.Triangle(-0.1, 0.1, -0.6, -0.1, -0.3, 0.5)
+	ShRdr.End
+
+	'Draws a green cone and an orange box (3D)
+	ShRdr.Begin(ShRdr.SHAPETYPE_Filled)
+		ShRdr.Color = Colour.GREEN
+		ShRdr.Cone2(0.6, 0.6, 0, 0.3, 0.75, 30)
+	ShRdr.End
+	ShRdr.Begin(ShRdr.SHAPETYPE_Line)
+		ShRdr.Color = Colour.WHITE
+		ShRdr.Cone2(0.6, 0.6, 0, 0.3, 0.75, 30)
+
+		ShRdr.Color = Colour.ORANGE
+		ShRdr.Box(0.1, 0.1, 0.1, 0.3, 0.25, 0.1)
+	ShRdr.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes the renderer
+	ShRdr.dispose
+End Sub
+
+Sub IP_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If Pointer <> 0 Then Return False
+	LastX = ScreenX
+	Return True
+End Sub
+
+Sub IP_TouchDragged(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If Pointer <> 0 Then Return False
+
+	'Rotates the camera on the Y axis
+	Point.Set(Camera.Position.X, Camera.Position.Y, Camera.Position.Z)
+	RotMatrix.setToRotation(Y_Axis, (LastX - ScreenX) / 5)
+	Point.Mul(RotMatrix)
+	Camera.Position.Set(Point.X, Point.y, Point.Z)
+	Camera.LookAt(0, 0, 0)
+	Camera.Update
+
+	LastX = ScreenX
+	Return True	
+End Sub

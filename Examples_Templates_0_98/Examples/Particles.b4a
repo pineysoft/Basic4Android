@@ -1,0 +1,104 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: lGDX Particles
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Effect As lgParticleEffect
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize
+
+	'Loads the four particle emitters
+	Effect.Initialize
+	Effect.Load(lGdx.Files.internal("particles/particles.p"), lGdx.Files.internal("particles"))
+	Dim L As List = Effect.Emitters
+	For i = 0 To L.Size - 1
+		Dim Emitter As lgParticleEmitter = L.Get(i)
+		Log(Emitter.Name & " emitter loaded")
+	Next
+
+	'Sets a random value for the wind of the smoke emitter
+	Dim Wind As lgParticleScaledNumericValue
+	Wind = Effect.FindEmitter("smoke").Wind
+	Wind.Low = Rnd(-10, 10)
+	Wind.High = Rnd(-60, 60)
+	Wind.Active = True
+
+	'Sets the position of emitters
+	Effect.SetPosition(lGdx.Graphics.Width / 2, lGdx.Graphics.Height / 2)
+	Effect.Start
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the particles
+	Batch.ProjectionMatrix = Camera.Combined
+	Batch.Begin
+	Effect.Draw2(Batch, lGdx.Graphics.DeltaTime)
+	Batch.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	Effect.dispose
+	Batch.dispose
+End Sub

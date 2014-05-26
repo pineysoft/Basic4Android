@@ -1,0 +1,237 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Windows
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Atlas, AtlasHandle As lgTextureAtlas
+	Dim Font As lgBitmapFont
+	Dim Stage As lgScn2DStage
+	Dim Count As Int = 4
+
+	Dim Texture As lgTexture
+	Dim imgTexture(Count * 2) As lgScn2DImage
+
+	Dim Window(Count) As lgScn2DWindow
+	Dim ExitDialog As lgScn2DWindow
+	Dim stylWindow As lgScn2DWindowStyle
+	Dim stylWindowWithDim As lgScn2DWindowStyle
+
+	Dim SplitPane(Count) As lgScn2DSplitPane
+	Dim stylSplitPaneHorizontal As lgScn2DSplitPaneStyle
+	Dim stylSplitPaneVertical As lgScn2DSplitPaneStyle
+
+	Dim TextButtonYes As lgScn2DTextButton
+	Dim TextButtonNo As lgScn2DTextButton
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the two atlas
+	Atlas.InitializeWithFile("atlas/uiskin.pack")
+	AtlasHandle.InitializeWithFile("atlas/handle.pack")
+
+	'Gets the font from the first atlas
+	Dim Region As lgTextureAtlasRegion = Atlas.FindRegion("arial22")
+	Font.Initialize4(lGdx.Files.internal("font/arial22.fnt"), Region)
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.1)
+
+	'Gets the window background from the first atlas
+	Dim npWindowBkgd As lgScn2DNinePatchDrawable
+	npWindowBkgd.Initialize2(Atlas.Create9Patch("default-window"))
+	npWindowBkgd.NinePatch.TopHeight = 40dip
+	npWindowBkgd.TopHeight = npWindowBkgd.NinePatch.TopHeight
+
+	'Creates the window styles
+	stylWindow.Initialize(Font, Font.Color.CYAN, npWindowBkgd)
+	stylWindowWithDim.Initialize2(stylWindow)
+	stylWindowWithDim.stageBackground = Atlas.CreateRegionDrawable("dim")
+
+	'Gets the SplitPane handles from the second atlas
+	Dim npHandleHorizontal, npHandleVertical As lgScn2DNinePatchDrawable
+	npHandleHorizontal.Initialize2(AtlasHandle.Create9Patch("hdlhoriz"))
+	npHandleVertical.Initialize2(AtlasHandle.Create9Patch("hdlvert"))
+
+	'Creates the SplitPane styles
+	stylSplitPaneHorizontal.Initialize(npHandleHorizontal)
+	stylSplitPaneHorizontal.HorizontalHandleSize = 40dip
+	stylSplitPaneVertical.Initialize(npHandleVertical)
+	stylSplitPaneVertical.VerticalHandleSize = 40dip
+
+	'Gets the Up and Down drawables of buttons
+	Dim npBtnUp As lgScn2DNinePatchDrawable
+	npBtnUp.Initialize2(Atlas.Create9Patch("default-round"))
+	Dim npBtnDown As lgScn2DNinePatchDrawable
+	npBtnDown.Initialize2(Atlas.Create9Patch("default-round-down"))
+
+	'Creates the text button's style
+	Dim stylTextButton As lgScn2DTextButtonStyle
+	stylTextButton.Initialize(npBtnUp, npBtnDown, Font)
+	stylTextButton.SetDrawableSize(145dip, 70dip)
+
+	'Creates the two text buttons
+	TextButtonYes.Initialize("YES", stylTextButton, "BtnYES")
+	TextButtonNo.Initialize("NO", stylTextButton, "BtnNO")
+
+	'Creates the images from a texture (to fill windows)
+	Texture.Initialize("libgdx.png")
+	Dim Width As Float = lGdx.Graphics.Width
+	For i = 0 To imgTexture.Length - 1
+		imgTexture(i).Initialize4(Texture, "")
+		imgTexture(i).Name = "Image #" & i
+		Dim TRD As lgScn2DTextureRegionDrawable = imgTexture(i).Drawable
+		TRD.MinWidth = Min(300dip, Width / 3)
+		TRD.MinHeight = Min(300dip, Width / 3)
+	Next
+
+	'Creates and places the windows
+	Dim Height As Float = lGdx.Graphics.Height
+	For i = 0 To Count - 1
+		Window(i).Initialize("Window #" & i, stylWindow, "Window")
+		Window(i).Name = Window(i).Title
+		Window(i).KeepWithinStage = True
+		Window(i).Modal = False
+		Window(i).Movable = True
+		Window(i).Resizable = True
+
+		'Creates a split pane inside the window
+		If i Mod 2 = 0 Then
+			SplitPane(i).Initialize(imgTexture(i * 2), imgTexture(i * 2 + 1), False, stylSplitPaneHorizontal, "SplitPn")
+		Else
+			SplitPane(i).Initialize(imgTexture(i * 2), imgTexture(i * 2 + 1), True, stylSplitPaneVertical, "SplitPn")
+		End If
+		SplitPane(i).Name = "SplitPn #" & i
+
+		Window(i).AddActor(SplitPane(i))
+		Window(i).Pack
+		Window(i).X = Rnd(0, Width - Window(i).Width)
+		Window(i).Y = Rnd(0, Height - Window(i).Height)
+		Stage.AddActor(Window(i))
+	Next
+
+	'Creates and places the exit dialog (but doesn't add it to the stage for now)
+	ExitDialog.Initialize("Do you confirm the exit ?", stylWindowWithDim, "")
+	ExitDialog.Modal = True
+	ExitDialog.Movable = False
+	ExitDialog.Resizable = False
+	ExitDialog.AddActor(TextButtonYes)
+	ExitDialog.AddActor(TextButtonNo)
+	ExitDialog.Pack
+	ExitDialog.X = (Width - ExitDialog.Width) / 2
+	ExitDialog.Y = (Height - ExitDialog.Height) / 2
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.45, 0.45, 0.7, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the windows
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Atlas.dispose
+	AtlasHandle.dispose
+	Texture.dispose
+End Sub
+
+Sub Window_TouchDown(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	Log("tch_DOWN " & Event.ListenerActor & " | Target=" & Event.Target & " | X,Y=" & Floor(X) & "," & Floor(Y))
+End Sub
+
+Sub Window_TouchDragged(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	Log("tch_DRAG " & Event.ListenerActor & " | Target=" & Event.Target & " | X,Y=" & Floor(X) & "," & Floor(Y))
+End Sub
+
+Sub Window_TouchUp(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	Log("tch_UP " & Event.ListenerActor & " | Target=" & Event.Target & " | X,Y=" & Floor(X) & "," & Floor(Y))
+End Sub
+
+Sub SplitPn_TouchDown(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	Log("tch_DOWN " & Event.ListenerActor & " | Target=" & Event.Target & " | X,Y=" & Floor(X) & "," & Floor(Y))
+End Sub
+
+Sub SplitPn_TouchDragged(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	Log("tch_DRAG " & Event.ListenerActor & " | Target=" & Event.Target & " | X,Y=" & Floor(X) & "," & Floor(Y))
+End Sub
+
+Sub Activity_KeyPress (KeyCode As Int) As Boolean 'Return True to consume the event
+	If KeyCode = KeyCodes.KEYCODE_BACK Then
+		'Back key -> displays the Exit dialog
+		If Not(ExitDialog.hasParent) Then
+			Stage.AddActor(ExitDialog)
+			ExitDialog.toFront
+		End If
+		Return True
+	End If
+	Return False
+End Sub
+
+Sub BtnYES_Click(CheckedState As Boolean)
+	'The exit is confirmed
+	Activity.Finish
+End Sub
+
+Sub BtnNO_Click(CheckedState As Boolean)
+	'The exit is cancelled
+	ExitDialog.Remove
+End Sub

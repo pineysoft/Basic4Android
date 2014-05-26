@@ -1,0 +1,257 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=typTree
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX_Perf_PolyTree
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: true
+#End Region
+
+Sub Process_Globals
+	Type typTree(Sprite As lgSprite, PolySprite As lgPolygonSprite, RotationSpeed As Float)
+	Dim FPSLabelTimer As Timer
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim PolyBatch As lgPolygonSpriteBatch
+	Dim ShapeRdr As lgShapeRenderer
+	Dim Surface As View
+	Dim lblFPS As Label
+	Dim spinNumber As Spinner
+	Dim cbxPolyMode As CheckBox
+	Dim lstTrees As List
+	Dim texTree As lgTexture
+	Dim polyTree As lgPolygonRegion
+	Dim Quantity As Int
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.Title = "LibGDX - Performance"
+
+	'Creates the spinner for the number of trees
+	spinNumber.Initialize("spinNumber")
+	spinNumber.TextSize = 20
+	For i = 1 To 26
+		spinNumber.Add(i * 15)
+	Next
+	Activity.AddView(spinNumber, 0, 0, 95dip, 45dip)
+
+	'Creates the mode selector
+	cbxPolyMode.Initialize("")
+	cbxPolyMode.Text = "Polygons"
+	cbxPolyMode.TextSize = 18
+	cbxPolyMode.Checked = True
+	Activity.AddView(cbxPolyMode, 100dip, 0, 120dip, 45dip)
+
+	'Creates the label to show the FPS
+	lblFPS.Initialize("")
+	lblFPS.TextSize = 24
+	lblFPS.TextColor = Colors.Green
+	lblFPS.Text = "FPS"
+	Activity.AddView(lblFPS, 100%x - 90dip, 0, 90dip, 45dip)
+
+	'Initializes the timer used to display the FPS count
+	FPSLabelTimer.Initialize("Timer", 500)
+
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	Surface = lGdx.InitializeView2(Config, "LG")
+	Activity.AddView(Surface, 0, 45dip, 100%x, 100%y - 45dip)
+End Sub
+
+Sub Activity_Resume
+	'Calls the Resume method of libGDX
+	If lGdx.IsInitialized Then lGdx.Resume
+
+	'Starts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Calls the Pause method of libGDX
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batchers
+	Batch.Initialize2(500)
+	PolyBatch.Initialize2(10900)
+	ShapeRdr.Initialize
+
+	'Loads the tree texture (128x128)
+	texTree.Initialize("tree.png")
+	texTree.SetFilter(texTree.FILTER_Linear, texTree.FILTER_Linear)
+
+	'Creates the polygon shape on top of the texture
+	'The .psh file has been made with Aurélien Ribon's Polygon Editor:
+	'https://code.google.com/p/libgdx-polygoneditor/downloads/list
+	Dim regionTree As lgTextureRegion
+	regionTree.InitializeWithTexture(texTree)
+	polyTree.Initialize(regionTree, lGdx.Files.Internal("tree.psh"))
+
+	'Initializes the number of trees
+	Quantity = spinNumber.SelectedItem
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub CreateTrees
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Clears all previous trees
+	If lstTrees.IsInitialized Then
+		lstTrees.Clear
+	Else
+		lstTrees.Initialize
+	End If
+
+	For i = 1 To Quantity
+		'Creates a new tree
+		Dim NewTree As typTree: NewTree.Initialize
+		NewTree.Sprite.InitializeWithTexture(texTree)
+		NewTree.PolySprite.InitializeWithRegion(polyTree)
+
+		'Rescales by the density of the device
+		NewTree.Sprite.SetScale(Density, Density)
+		NewTree.PolySprite.SetScale(Density, Density)
+
+		'Positions the tree horizontally between the left and right of the range
+		Dim OffsetX As Int = (NewTree.Sprite.BoundingRectangle.Width / 2) - NewTree.Sprite.OriginX
+		NewTree.Sprite.X = Rnd(OffsetX, lGdx.Graphics.Width - NewTree.Sprite.BoundingRectangle.Width + OffsetX)
+		NewTree.PolySprite.X = NewTree.Sprite.X
+
+		'Positions the tree vertically between the top and bottom of the range
+		Dim OffsetY As Int = (NewTree.Sprite.BoundingRectangle.Height / 2) - NewTree.Sprite.OriginY
+		NewTree.Sprite.Y = Rnd(OffsetY, lGdx.Graphics.Height - NewTree.Sprite.BoundingRectangle.Height + OffsetY)
+		NewTree.PolySprite.Y = NewTree.Sprite.Y
+
+		'Trees start at -90 to 90 degrees rotation, and rotate between -45 and 45 degrees per second
+		NewTree.Sprite.Rotation = Rnd(0, 180) - 90
+		NewTree.PolySprite.Rotation = NewTree.Sprite.Rotation
+		NewTree.RotationSpeed = Rnd(0, 90) - 45
+
+		lstTrees.Add(NewTree)
+	Next
+	Log("Trees = " & lstTrees.Size)
+
+	'Resets the quantity
+	Quantity = 0
+
+	'Restarts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub LG_Render
+	'Creates the trees if not done
+	If Quantity > 0 Then
+		CreateTrees
+	End If
+
+	'Clears the screen with a gray background
+	GL.glClearColor(0.4, 0.4, 0.4, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+	PolyBatch.ProjectionMatrix = Camera.Combined
+
+	Try
+		'Computes the new orientation of trees
+		For i = 0 To lstTrees.Size - 1
+			Dim myTree As typTree = lstTrees.Get(i)
+			myTree.Sprite.Rotation = myTree.Sprite.Rotation + (myTree.RotationSpeed * lGdx.Graphics.DeltaTime)
+			myTree.PolySprite.Rotation = myTree.Sprite.Rotation
+		Next
+
+		'Draws the trees with the selected mode
+		Dim Tree As typTree
+		Dim Bounds As lgMathRectangle
+		If cbxPolyMode.Checked Then
+			PolyBatch.Begin
+			For i = 0 To lstTrees.Size - 1
+				Tree = lstTrees.Get(i)
+				Tree.PolySprite.Draw(PolyBatch)
+			Next
+			PolyBatch.End
+			Bounds = Tree.PolySprite.BoundingRectangle
+		Else
+			Batch.Begin
+			For i = 0 To lstTrees.Size - 1
+				Tree = lstTrees.Get(i)
+				Tree.Sprite.Draw(Batch)
+			Next
+			Batch.End
+			Bounds = Tree.Sprite.BoundingRectangle
+		End If
+
+		'Draws a bounding rectangle around the last tree
+		ShapeRdr.Begin(ShapeRdr.SHAPETYPE_Line)
+		ShapeRdr.SetColorRGBA(1, 0, 0, 1) 'Red
+		ShapeRdr.Rect(Bounds.x, Bounds.y, Bounds.width, Bounds.height)
+		ShapeRdr.Rect(Bounds.x + 1, Bounds.y + 1, Bounds.width - 2, Bounds.height - 2)
+		ShapeRdr.End
+	Catch
+		Log(LastException.Message)
+	End Try
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources used by lgTexture, lgSpriteBatch and lgPolygonSpriteBatch
+	texTree.dispose
+	Batch.dispose
+	PolyBatch.dispose
+	ShapeRdr.dispose
+End Sub
+
+Sub spinNumber_ItemClick(Position As Int, Value As Object)
+	'Changes the number of trees
+	Quantity = Value
+End Sub
+
+Sub Timer_Tick
+	'Displays the FPS
+	lblFPS.Text = "FPS:" & lGdx.Graphics.FramesPerSecond
+End Sub

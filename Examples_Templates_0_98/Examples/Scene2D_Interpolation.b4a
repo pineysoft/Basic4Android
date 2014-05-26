@@ -1,0 +1,195 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=3
+Library1=core
+Library2=libgdx
+Library3=reflection
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: False
+	#ApplicationLabel: Scn2D Interpolation
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Font As lgBitmapFont
+	Dim Texture As lgTexture
+	Dim RightWalkFrames() As lgTextureRegion
+	Dim WalkAnim As lgAnimation
+	Dim FrameWidth As Int = 32
+	Dim FrameHeight As Int = 48
+	Dim Stage As lgScn2DStage
+	Dim Actions As lgScn2DActions
+	Dim Elf(9) As lgScn2DActor
+	Dim Caption(9) As lgScn2DLabel
+	Dim Interpolation(9) As lgMathInterpolation
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub GetRegionArray(MultiDimArray As Object, Index As Int) As lgTextureRegion()
+	Dim r As Reflector
+	r.Target = MultiDimArray
+	Return r.GetArray(Array As Int(Index))
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Adds a capture listener to the stage
+	Dim IL As lgScn2DInputListener
+	IL.Initialize("ST")
+	Stage.AddCaptureListener(IL)
+
+	'Loads the texture of frames
+	Texture.Initialize("animation.png")
+
+	'Splits the texture
+	Dim Region As lgTextureRegion
+	Region.InitializeWithTexture(Texture)
+	RightWalkFrames = GetRegionArray(Region.Split(FrameWidth, FrameHeight), 2)
+
+	'Initializes the animation
+	WalkAnim.Initialize(200 / lGdx.Graphics.Width, RightWalkFrames)
+
+	'Creates and positions the actors
+	Dim StepY As Float = lGdx.Graphics.Height / 9.1
+	For i = 0 To 8
+		Elf(i).Initialize("ELF")
+		Elf(i).Name = "Elf #" & i
+		Elf(i).Height = Min(FrameHeight * Density, StepY)
+		Elf(i).Width = FrameWidth / FrameHeight * Elf(i).Height
+		Elf(i).X = Elf(i).Width * 1.5
+		Elf(i).Y = (i + 0.1) * StepY
+		Elf(i).Tag = 0 'StateTime
+		Stage.AddActor(Elf(i))
+	Next
+
+	'Loads the default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.5)
+
+	'Creates and positions the captions
+	Dim Style As lgScn2DLabelStyle
+	Style.Initialize(Font, Font.Color.LIGHT_GRAY)
+	Caption(8).Initialize("Linear", Style, "")
+	Caption(7).Initialize("Bounce", Style, "")
+	Caption(6).Initialize("Circle", Style, "")
+	Caption(5).Initialize("Elastic", Style, "")
+	Caption(4).Initialize("Exp5", Style, "")
+	Caption(3).Initialize("Fade", Style, "")
+	Caption(2).Initialize("Pow5", Style, "")
+	Caption(1).Initialize("Sine", Style, "")
+	Caption(0).Initialize("Swing", Style, "")
+	For i = 0 To 8
+		Caption(i).setPosition(100dip, Elf(i).Y + 2dip)
+		Stage.Root.addActorBefore(Elf(i), Caption(i)) 'The caption is behind the elf
+	Next
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the actors and captions
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+	'Cancels all actions and resets the X position
+	Reset
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Font.dispose
+	Texture.dispose
+End Sub
+
+Sub Reset
+	'Cancels all actions and resets the X position
+	For i = 0 To 8
+		Elf(i).clearActions
+		Elf(i).X = Elf(i).Width * 1.5
+	Next
+End Sub
+
+Sub ST_TouchDown(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	If Elf(0).HasActions OR Elf(0).X > Elf(0).Width * 2 Then
+		'Cancels all actions and resets the X position
+		Reset
+	End If
+
+	'Adds a MoveBy action with an interpolator to each actor
+	Interpolation(8) = Interpolation(8).linear
+	Interpolation(7) = Interpolation(7).bounce
+	Interpolation(6) = Interpolation(6).circle
+	Interpolation(5) = Interpolation(5).elastic
+	Interpolation(4) = Interpolation(4).exp5
+	Interpolation(3) = Interpolation(3).fade
+	Interpolation(2) = Interpolation(2).pow5
+	Interpolation(1) = Interpolation(1).sine
+	Interpolation(0) = Interpolation(0).swing
+	For i = 0 To 8
+		Elf(i).AddAction(Actions.MoveBy3(lGdx.Graphics.Width - (Elf(i).Width * 4), 0, 5, Interpolation(i)))
+	Next
+End Sub
+
+Sub ELF_Draw(SpriteBatch As lgSpriteBatch, ParentAlpha As Float)
+	'Draws the elf
+	Dim Actor As lgScn2DActor = Sender
+	Dim Frame As lgTextureRegion
+	If Actor.HasActions Then
+		'Walking
+		Frame = WalkAnim.GetKeyFrame2(Actor.Tag, True)
+		Actor.Tag = Actor.Tag + lGdx.Graphics.DeltaTime 'StateTime
+	Else
+		'Static
+		Frame = RightWalkFrames(0)
+		Actor.Tag = 0
+	End If
+	SpriteBatch.DrawRegion3(Frame, Actor.X, Actor.Y, Actor.OriginX, Actor.OriginY, Actor.Width, Actor.Height, Actor.ScaleX, Actor.ScaleY, Actor.Rotation)
+End Sub

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	package="anywheresoftware.b4a.samples.livewallpaperimage"
+	android:versionCode="1"
+	android:versionName=""
+	android:installLocation="internalOnly">
+	
+	<uses-sdk android:minSdkVersion="7" />
+	<supports-screens android:largeScreens="true" 
+	    android:normalScreens="true" 
+	    android:smallScreens="true" 
+	    android:anyDensity="true"/>
+	<application
+		android:icon="@drawable/icon"
+		android:label="LiveWallpaper Image">
+		
+		<!-- ******** Add the internal service declaration - you can change android:label  ******* -->
+		<service
+		        android:label="Image Livewallpaper" 
+		        android:name="anywheresoftware.b4a.objects.WallpaperInternalService"
+		        android:permission="android.permission.BIND_WALLPAPER">
+		        <intent-filter>
+		            <action android:name="android.service.wallpaper.WallpaperService" />
+		        </intent-filter>
+		        <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper" />
+		</service>
+		<activity
+			android:windowSoftInputMode="stateHidden"
+			android:launchMode="singleTop"
+			android:name=".main"
+			android:label="LiveWallpaper Image"
+			android:screenOrientation="unspecified">
+			<intent-filter>
+			   <action android:name="android.intent.action.MAIN" />
+			   <category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+			
+		</activity>
+		<service android:name=".wallpaperservice">
+		</service>
+		<receiver android:name=".wallpaperservice$wallpaperservice_BR">
+		</receiver>
+	</application>
+</manifest>

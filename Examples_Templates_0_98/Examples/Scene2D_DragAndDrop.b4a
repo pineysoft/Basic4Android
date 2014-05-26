@@ -1,0 +1,266 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Drag'n'Drop
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Stage As lgScn2DStage
+	Dim Atlas As lgTextureAtlas
+	Dim Family, Cat, Dog As lgScn2DImage
+	Dim FamilyDrag, CatDrag, DogDrag As lgScn2DImage
+	Dim House, DogHouse As lgScn2DImage
+	Dim DragAndDrop As lgScn2DDragAndDrop
+	Dim DnDPayload As lgScn2DDragAndDropPayload
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the texture atlas
+	Atlas.InitializeWithFile("atlas/dragdrop.pack")
+
+	'Creates the actors
+	House.Initialize3(Atlas.FindRegion("house"), "")
+	Stage.AddActor(House)
+	House.Tag = False 'No animal presence
+
+	DogHouse.Initialize3(Atlas.FindRegion("doghouse"), "")
+	Stage.AddActor(DogHouse)
+
+	Family.Initialize3(Atlas.FindRegion("family"), "")
+	Stage.AddActor(Family)
+	FamilyDrag.InitializeWithDrawable(Family.Drawable, "")
+
+	Cat.Initialize3(Atlas.FindRegion("cat"), "")
+	Stage.AddActor(Cat)
+	CatDrag.InitializeWithDrawable(Cat.Drawable, "")
+
+	Dog.Initialize3(Atlas.FindRegion("dog"), "")
+	Stage.AddActor(Dog)
+	DogDrag.InitializeWithDrawable(Dog.Drawable, "")
+
+	'Sets the size and position of actors
+	Dim Height As Float  = lGdx.Graphics.Height
+	Dim Width As Float  = lGdx.Graphics.Width
+	House.Height = Height * 0.7
+	House.Width = House.Height * 0.9211
+	House.X = Width - House.Width
+	House.Y = Height - House.Height
+
+	DogHouse.Height = Height * 0.3
+	DogHouse.Width = DogHouse.Height * 0.9829
+	DogHouse.X = Width - DogHouse.Width
+	DogHouse.Y = House.Y - DogHouse.Height
+
+	Family.Height = Height * 0.58
+	Family.Width = Family.Height * 0.7777
+	Family.X = 0
+	Family.Y = Height - Family.Height
+	FamilyDrag.Height = Max(Family.Height / 2, 40dip)
+	FamilyDrag.Width = FamilyDrag.Height * 0.7777
+
+	Cat.Height = Family.Height * 0.27
+	Cat.Width = Cat.Height * 0.9259
+	Cat.X = 0
+	Cat.Y = Family.Y - Cat.Height
+	CatDrag.Height = Max(Cat.Height / 2, 40dip)
+	CatDrag.Width = CatDrag.Height * 0.9259
+
+	Dog.Height = Family.Height * 0.45
+	Dog.Width = Dog.Height * 1.2329
+	Dog.X = 0
+	Dog.Y = Cat.Y - Dog.Height
+	DogDrag.Height = Max(Dog.Height / 2, 40dip)
+	DogDrag.Width = DogDrag.Height * 1.2329
+
+	'Sets the drag'n'drop sources and targets
+	DragAndDrop.Initialize
+	DragAndDrop.AddSource(Family, "Family")
+	DragAndDrop.AddSource(Cat, "Cat")
+	DragAndDrop.AddSource(Dog, "Dog")
+	DragAndDrop.AddTarget(DogHouse, "DogHouse")
+	DragAndDrop.AddTarget(House, "House")
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0, 0.7, 0, 1) 'Green
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the actors
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	Atlas.dispose
+End Sub
+
+Sub Family_SrcDragStart(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int) As lgScn2DDragAndDropPayload
+	'Makes the family actor invisible
+	Family.Visible = False
+
+	'Sets the drag actor for the family
+	DnDPayload.DragActor = FamilyDrag
+	DragAndDrop.SetDragActorPosition(-FamilyDrag.Width, FamilyDrag.Height)
+	Return DnDPayload
+End Sub
+
+Sub Family_SrcDragStop(Event As lgScn2DInputEvent, DropTarget As lgScn2DActor, X As Float, Y As Float, Pointer As Int, Payload As lgScn2DDragAndDropPayload)
+	'Makes the family actor visible
+	Family.Visible = True
+End Sub
+
+Sub Cat_SrcDragStart(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int) As lgScn2DDragAndDropPayload
+	'Makes the cat actor invisible
+	Cat.Visible = False
+
+	'Sets the drag actor for the cat
+	DnDPayload.DragActor = CatDrag
+	DragAndDrop.SetDragActorPosition(-CatDrag.Width, CatDrag.Height)
+	Return DnDPayload
+End Sub
+
+Sub Cat_SrcDragStop(Event As lgScn2DInputEvent, DropTarget As lgScn2DActor, X As Float, Y As Float, Pointer As Int, Payload As lgScn2DDragAndDropPayload)
+	'Makes the cat actor visible
+	Cat.Visible = True
+End Sub
+
+Sub Dog_SrcDragStart(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int) As lgScn2DDragAndDropPayload
+	'Makes the dog actor invisible
+	Dog.Visible = False
+
+	'Sets the drag actor for the dog
+	DnDPayload.DragActor = DogDrag
+	DragAndDrop.SetDragActorPosition(-DogDrag.Width, DogDrag.Height)
+	Return DnDPayload
+End Sub
+
+Sub Dog_SrcDragStop(Event As lgScn2DInputEvent, DropTarget As lgScn2DActor, X As Float, Y As Float, Pointer As Int, Payload As lgScn2DDragAndDropPayload)
+	'Makes the dog actor visible
+	Dog.Visible = True
+End Sub
+
+Sub DogHouse_TgtDrag(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload, X As Float, Y As Float, Pointer As Int) As Boolean
+	'Checks whether the source can be dropped
+	If Source = Family OR Source = Cat Then
+		DogHouse.Color = DogHouse.Color.RED
+		Return False
+	Else 'Source = Dog
+		DogHouse.Color = DogHouse.Color.GREEN
+		Return True
+	End If
+End Sub
+
+Sub DogHouse_TgtReset(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload)
+	DogHouse.Color = DogHouse.Color.WHITE
+End Sub
+
+Sub DogHouse_TgtDrop(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload, X As Float, Y As Float, Pointer As Int)
+	'The source actor is displayed in front of the dog house
+	Source.setScale(0.5, 0.5)
+	Source.X = Payload.DragActor.X
+	Source.Y = DogHouse.Y
+
+	'It is removed from the drag'n'drop sources
+	DragAndDrop.RemoveSource(Source)
+End Sub
+
+Sub House_TgtDrag(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload, X As Float, Y As Float, Pointer As Int) As Boolean
+	'Checks whether the source can be dropped
+	If Source = Family Then
+		House.Color = House.Color.GREEN
+		Return True
+	Else If Source = Cat Then
+		If House.Tag = Dog Then
+			'There's a dog in the house!
+			House.Color = House.Color.RED
+			Return False
+		Else
+			House.Color = House.Color.GREEN
+			Return True
+		End If
+	Else 'Source = Dog
+		If House.Tag = Cat Then
+			'There's a cat in the house!
+			House.Color = House.Color.RED
+			Return False
+		Else
+			House.Color = House.Color.GREEN
+			Return True
+		End If
+	End If
+End Sub
+
+Sub House_TgtReset(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload)
+	House.Color = House.Color.WHITE
+End Sub
+
+Sub House_TgtDrop(Source As lgScn2DActor, Payload As lgScn2DDragAndDropPayload, X As Float, Y As Float, Pointer As Int)
+	'The source actor is displayed in front of the house
+	Source.setScale(0.5, 0.5)
+	Source.X = Payload.DragActor.X
+	Source.Y = House.Y
+
+	'It is removed from the drag'n'drop sources
+	DragAndDrop.RemoveSource(Source)
+
+	'The house keeps track of an animal presence
+	If Source = Dog OR Source = Cat Then
+		House.Tag = Source
+	End If
+End Sub

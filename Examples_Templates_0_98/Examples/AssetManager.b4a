@@ -1,0 +1,140 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.testlibgdx
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Asset Manager
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim AM As lgAssetManager
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the asset manager
+	AM.Initialize("AM")
+
+	'Adds a few assets to the loading queue of the asset manager
+	AM.TiledMapLoader = AM.MAPLOADER_tIDE
+	AM.Load("maps/tide/Map01.tide", AM.TYPE_TiledMap)
+	AM.Load("font/font.fnt", AM.TYPE_BitmapFont)
+	AM.Load("audio/reggae.mp3", AM.TYPE_Music)
+	AM.Load("audio/bubblepop.ogg", AM.TYPE_Sound)
+	AM.Load("audio/shotgun.wav", AM.TYPE_Sound)
+	AM.Load("particles/particles.p", AM.TYPE_ParticleEffect)
+	AM.Load("background.jpg", AM.TYPE_Pixmap)
+	AM.Load("tree.psh", AM.TYPE_PolygonRegion)
+	AM.Load("smiley.png", AM.TYPE_Texture)
+	AM.Load("atlas/atlas.pack", AM.TYPE_TextureAtlas)
+	Log("------" & CRLF & "Queued assets=" & AM.QueuedAssets & CRLF & "------")
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+	'Loads the assets asynchronously
+	If AM.Update Then
+		Log("Progress=" & Floor(AM.Progress * 100) & "%")
+		Return
+	End If
+
+	'The loading is finished
+	Log("Progress=" & (AM.Progress * 100) & "%") 'Should be 100%
+
+	'Stops the rendering
+	lGdx.Graphics.ContinuousRendering = False
+
+	'Logs some information about the loaded assets
+	Log("------")
+	Log("Loaded assets:")
+	Dim L As List = AM.LoadedAssetNames
+	L.Sort(True)
+	For i = 0 To L.Size - 1
+		Log("- " & L.Get(i) & " (" & AM.GetAssetType(L.Get(i)) & ")")
+	Next
+	Log("------")
+	Log("Dependencies of Map01.tide:")
+	Dim L As List = AM.GetDependencies("maps/tide/Map01.tide")
+	For i = 0 To L.Size - 1
+		Log("- " & L.Get(i))
+	Next
+	Log("------")
+	Dim myAtlas As lgTextureAtlas = AM.Get("atlas/atlas.pack")
+	Dim myFont As lgBitmapFont = AM.Get("font/font.fnt")
+	Dim myMusic As lgMusic = AM.Get("audio/reggae.mp3")
+	Dim mySound As lgSound = AM.Get("audio/bubblepop.ogg")
+	Dim myPEff As lgParticleEffect = AM.Get("particles/particles.p")
+	Dim myPix As lgPixmap = AM.Get("background.jpg")
+	Dim myPolyRg As lgPolygonRegion = AM.Get("tree.psh")
+	Dim myTex As lgTexture = AM.Get("smiley.png")
+	Dim myTiledMap As lgMapTiledMap = AM.Get("maps/tide/Map01.tide")
+	Log(AM.GetAssetFileName(myAtlas))
+	Log(AM.GetAssetFileName(myFont))
+	Log(AM.GetAssetFileName(myMusic))
+	Log(AM.GetAssetFileName(mySound))
+	Log(AM.GetAssetFileName(myPEff))
+	Log(AM.GetAssetFileName(myPix))
+	Log(AM.GetAssetFileName(myPolyRg))
+	Log(AM.GetAssetFileName(myTex))
+	Log(AM.GetAssetFileName(myTiledMap))
+	Log("------")
+	Log("Contains Map01.tide = " & AM.ContainsAsset(myTiledMap))
+	Log("------")
+
+	'The End!
+	Activity.Finish
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	AM.dispose
+End Sub
+
+Sub AM_Error(FileName As String, Class As Object, Message As String)
+	Log("- ERROR !!! ---")
+	Log("FileName=" & FileName)
+	Log("Class=" & Class)
+	Log("Message=" & Message)
+	Log("- ERROR !!! ---")
+End Sub

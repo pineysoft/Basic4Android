@@ -1,0 +1,234 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Slider Crank
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim LG_Camera As lgOrthographicCamera
+	Dim LG_Batch As lgSpriteBatch
+	Dim LG_Color As lgColor
+	Dim LG_Input As lgInputProcessor
+	Dim Font As lgBitmapFont
+	Dim World As lgBox2DWorld
+	Dim Renderer As lgBox2DDebugRenderer
+	Dim m_Joint1, m_Joint2 As Object
+	Dim Scale As Int = 16
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Sprite batcher
+	LG_Batch.Initialize
+
+	'Debug renderer
+	Renderer.Initialize2(True, True, False, True, False, False)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground
+	Dim bd As lgBox2DBodyDef
+	Dim ground As lgBox2DBody = World.createBody(bd)
+
+	Dim eShape As lgBox2DEdgeShape
+	Dim V1, V2 As lgMathVector2
+	eShape.set(V1.set(-40, 0), V2.set(40, 0))
+	ground.createFixture2(eShape, 0)
+	eShape.dispose
+
+	Dim prevBody As lgBox2DBody = ground
+
+	'Crank.
+	Dim pShape As lgBox2DPolygonShape
+	pShape.setAsBox(0.5, 2)
+
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+	bd.position.set(0, 7)
+	Dim body As lgBox2DBody = World.createBody(bd)
+	body.createFixture2(pShape, 2)
+	pShape.dispose
+
+	Dim rjd As lgBox2DRevoluteJointDef
+	Dim V2 As lgMathVector2
+	rjd.initialize(prevBody, body, V2.set(0, 5))
+	rjd.motorSpeed = 1 * cPI
+	rjd.maxMotorTorque = 10000
+	rjd.enableMotor = True
+	m_Joint1 = World.CreateJoint(rjd)
+
+	prevBody = body
+
+	'Follower
+	Dim pShape As lgBox2DPolygonShape
+	pShape.setAsBox(0.5, 4)
+
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+	bd.position.set(0, 13)
+	Dim body As lgBox2DBody = World.createBody(bd)
+	body.createFixture2(pShape, 2)
+	pShape.dispose
+
+	Dim rjd As lgBox2DRevoluteJointDef
+	Dim V2 As lgMathVector2
+	rjd.initialize(prevBody, body, V2.set(0, 9))
+	rjd.enableMotor = False
+	World.createJoint(rjd)
+
+	prevBody = body
+
+	'Piston
+	Dim pShape As lgBox2DPolygonShape
+	pShape.setAsBox(1.5, 1.5)
+
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+	bd.fixedRotation = True
+	bd.position.set(0, 17)
+	Dim body As lgBox2DBody = World.createBody(bd)
+	body.createFixture2(pShape, 2)
+	pShape.dispose
+
+	Dim rjd As lgBox2DRevoluteJointDef
+	Dim V2 As lgMathVector2
+	rjd.initialize(prevBody, body, V2.set(0, 17))
+	World.createJoint(rjd)
+
+	Dim pjd As lgBox2DPrismaticJointDef
+	Dim V1, V2 As lgMathVector2
+	pjd.initialize(ground, body, V1.set(0, 17), V2.set(0, 1))
+
+	pjd.maxMotorForce = 1000
+	pjd.enableMotor = False
+
+	m_Joint2 = World.createJoint(pjd)
+
+	'Payload
+	Dim pShape As lgBox2DPolygonShape
+	pShape.setAsBox(1.5, 1.5)
+
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+	bd.position.set(0, 23)
+	Dim body As lgBox2DBody = World.createBody(bd)
+	body.createFixture2(pShape, 2)
+	pShape.dispose
+
+	'Default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(1.5 * Density)
+
+	'Input processor
+	LG_Input.Initialize("LG")
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	LG_Camera.Initialize2(Width / Scale, Height / Scale)
+	LG_Camera.Position.set(0, Height / 40, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	LG_Camera.Update
+
+	'Updates and draws the simulation with the coordinate system of the camera
+	LG_Update
+	Renderer.render(World.InternalObject, LG_Camera.Combined)
+
+	'Changes the coordinate system for the text (pixel based)
+	LG_Batch.ProjectionMatrix.setToOrtho2D(0, 0, lGdx.Graphics.Width, lGdx.Graphics.Height)
+
+	'Draws the text in the top left corner
+	LG_Batch.Begin
+	Dim Y As Int = lGdx.Graphics.Height
+	Font.Draw2(LG_Batch, "Touch the screen to toggle the motor", 0, Y, LG_Color.WHITE)
+	Dim RJ As lgBox2DRevoluteJoint = m_Joint1
+	If RJ.isMotorEnabled Then
+		Font.Draw2(LG_Batch, "ON", 0, Y - Font.LineHeight, LG_Color.GREEN)
+	Else
+		Font.Draw2(LG_Batch, "OFF", 0, Y - Font.LineHeight, LG_Color.RED)
+	End If
+	LG_Batch.End
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+End Sub
+
+Sub LG_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	'Toggles motor and friction
+	Dim RJ As lgBox2DRevoluteJoint = m_Joint1
+	Dim PJ As lgBox2DPrismaticJoint = m_Joint2
+	RJ.enableMotor(Not(RJ.isMotorEnabled))
+	PJ.enableMotor(Not(PJ.isMotorEnabled))
+	Return True
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	World.dispose
+	Font.dispose
+	LG_Batch.dispose
+End Sub

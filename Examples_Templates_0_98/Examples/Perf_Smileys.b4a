@@ -1,0 +1,213 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=typSmiley
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX_Perf_Smileys
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: true
+#End Region
+
+Sub Process_Globals
+	Type typSmiley(X As Float, Y As Float, dX As Float, dY As Float, Color As lgColor)
+	Dim FPSLabelTimer As Timer
+End Sub
+
+Sub Globals
+	Dim Surface As View
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Batch As lgSpriteBatch
+	Dim Camera As lgOrthographicCamera
+	Dim lblFPS As Label
+	Dim spinNS As Spinner
+	Dim texSmiley As lgTexture
+	Dim lstSmileys As List
+	Dim Quantity As Int
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.Title = "libGDX - Performance"
+
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	Surface = lGdx.InitializeView2(Config, "LG")
+	Activity.AddView(Surface, 0, 0, 100%x, 78%y)
+
+	'Creates the FPS label
+	lblFPS.Initialize("")
+	lblFPS.TextSize = 24
+	lblFPS.TextColor = Colors.Green
+	lblFPS.Text = "FPS"
+	Activity.AddView(lblFPS, 10%x, 86%y, 100%x, 60dip)
+	FPSLabelTimer.Initialize("Timer", 500)
+
+	'Creates the spinner for the number of smileys
+	spinNS.Initialize("spinNS")
+	spinNS.TextSize = 24
+	spinNS.Prompt = "Number of smileys"
+	For i = 25 To 1000 Step 25
+		spinNS.Add(i)
+	Next
+	spinNS.SelectedIndex = 3
+	Activity.AddView(spinNS, 52%x, 85%y, 40%x, 50dip)
+End Sub
+
+Sub Activity_Resume
+	'Calls the Resume method of libGDX
+	If lGdx.IsInitialized Then lGdx.Resume
+
+	'Starts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Calls the Pause method of libGDX
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize
+
+	'Loads the smiley image (64x64)
+	texSmiley.Initialize("smiley.png")
+
+	'Initializes the number of smileys
+	Quantity = spinNS.SelectedItem
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+End Sub
+
+Sub CreateSmileys
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Creates the list of smileys
+	If lstSmileys.IsInitialized Then
+		lstSmileys.Clear
+	Else
+		lstSmileys.Initialize
+	End If
+
+	Dim MU As lgMathUtils
+	For i = 1 To Quantity
+		Dim Smiley As typSmiley
+		Smiley.Initialize
+		Smiley.X = Rnd(64dip * 0.5, Surface.Width - (64dip * 1.5))
+		Smiley.Y = Rnd(64dip * 0.5, Surface.Height - (64dip * 1.5))
+		Smiley.dX = Rnd(3, 6)
+		Smiley.dY = Rnd(3, 6)
+		If Rnd(0, 2) = 0 Then Smiley.dX = -Smiley.dX
+		If Rnd(0, 2) = 0 Then Smiley.dY = -Smiley.dY
+		Smiley.Color.SetRGBA(MU.RandomFloat2(0.2, 1), MU.RandomFloat2(0.2, 1), MU.RandomFloat2(0.2, 1), 1)
+		lstSmileys.Add(Smiley)
+	Next
+	Log("Smileys = " & lstSmileys.Size)
+
+	'Resets the quantity
+	Quantity = 0
+
+	'Restarts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub LG_Render
+	'Creates the smileys if not done
+	If Quantity > 0 Then
+		CreateSmileys
+	End If
+
+	'Clears the screen and colors the background in blue
+	GL.glClearColor(0, 0, 0.4, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	Try
+		'Updates the position of smileys
+		LG_Update
+
+		'Draws the smileys with their new position
+		Batch.Begin
+			Dim Smiley As typSmiley
+			For i = 0 To lstSmileys.Size - 1
+				Smiley = lstSmileys.Get(i)
+				Batch.Color = Smiley.Color
+				Batch.DrawTex2(texSmiley, Smiley.x, Smiley.y, 64dip, 64dip)
+			Next
+		Batch.End
+	Catch
+		Log(LastException.Message)
+	End Try
+End Sub
+
+Sub LG_Update
+	'Computes the new position of each smiley
+	'When an edge is reached, the smiley moves in the opposite direction
+	For i = 0 To lstSmileys.Size - 1
+		Dim Smiley As typSmiley = lstSmileys.Get(i)
+		Smiley.x = Smiley.x + Smiley.dx
+		Smiley.y = Smiley.y + Smiley.dy
+		If Smiley.x < Abs(Smiley.dx) OR Smiley.x >= Surface.Width - 64dip Then
+			Smiley.dx = -Smiley.dx
+		End If
+		If Smiley.y < Abs(Smiley.dy) OR Smiley.y >= Surface.Height - 64dip Then
+			Smiley.dy = -Smiley.dy
+		End If
+	Next
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources used by lgTexture and lgSpriteBatch
+	texSmiley.dispose	
+	Batch.dispose
+End Sub
+
+Sub spinNS_ItemClick(Position As Int, Value As Object)
+	'Changes the number of smileys
+	Quantity = Value
+End Sub
+
+Sub Timer_Tick
+	'Displays the FPS
+	lblFPS.Text = "FPS:" & lGdx.Graphics.FramesPerSecond
+End Sub

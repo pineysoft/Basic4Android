@@ -1,0 +1,147 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Test LibGDX
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim IP As lgInputProcessor
+	Dim GD As lgGestureDetector
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Sets the InputProcessor and the GestureDetector
+	IP.Initialize("IP")
+	GD.Initialize("GD")
+
+	'...
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho2(False, Width, Height)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates
+	LG_Update
+
+	'Draws
+	'...
+End Sub
+
+Sub LG_Update
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'...
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	'...
+End Sub
+
+Sub IP_KeyDown(KeyCode As Int) As Boolean
+	Return False
+End Sub
+
+Sub IP_KeyUp(KeyCode As Int) As Boolean
+	Return False
+End Sub
+
+Sub IP_KeyTyped(Character As Char) As Boolean
+	Return False
+End Sub
+
+Sub IP_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub IP_TouchDragged(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub IP_TouchUp(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub GD_TouchDown(X As Float, Y As Float, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub GD_Fling(VelocityX As Float, VelocityY As Float) As Boolean
+	Return False
+End Sub
+
+Sub GD_LongPress(X As Float, Y As Float) As Boolean
+	Return False
+End Sub
+
+Sub GD_Pan(X As Float, Y As Float, DeltaX As Float, DeltaY As Float) As Boolean
+	Return False
+End Sub
+
+Sub GD_PanStop(X As Float, Y As Float, Pointer As Int) As Boolean
+	Return False
+End Sub
+
+Sub GD_Pinch(InitialPointer1 As lgMathVector2, InitialPointer2 As lgMathVector2, Pointer1 As lgMathVector2, Pointer2 As lgMathVector2) As Boolean
+	Return False
+End Sub
+
+Sub GD_Tap(X As Float, Y As Float, Count As Int) As Boolean
+	Return False
+End Sub
+
+Sub GD_Zoom(InitialDistance As Float, Distance As Float) As Boolean
+	Return False
+End Sub

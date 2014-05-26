@@ -1,0 +1,260 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Edge Shapes
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim LG_Input As lgInputProcessor
+	Dim LG_Camera As lgOrthographicCamera
+	Dim LG_Batch As lgSpriteBatch
+	Dim LG_ShapeRdr As lgShapeRenderer
+	Dim Font As lgBitmapFont
+	Dim FontCache As lgBitmapFontCache
+	Dim World As lgBox2DWorld
+	Dim Renderer As lgBox2DDebugRenderer
+	Dim RCallback As lgBox2DRayCastCallback
+	Dim m_Polygons(4) As lgBox2DPolygonShape
+	Dim m_Circle As lgBox2DCircleShape
+	Dim m_Angle As Float
+	Dim m_Fixture As lgBox2DFixture
+	Dim m_Point, m_Pt1, m_Pt2, m_Delta As lgMathVector2
+	Dim e_MaxBodies As Int = 100
+	Dim m_BodyIndex As Int
+	Dim m_Bodies(e_MaxBodies) As lgBox2DBody
+	Dim Scale As Int = 18
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Renderers
+	LG_Batch.Initialize 'For text
+	LG_ShapeRdr.Initialize 'For ray
+	Renderer.Initialize2(True, True, False, True, False, False) 'For Box2D objects
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground
+	Dim bd As lgBox2DBodyDef
+	Dim ground As lgBox2DBody = World.createBody(bd)
+
+	Dim x1 As Float = -20
+	Dim y1 As Float = 2 * Cos(x1 / 10 * cPI)
+	For i = 0 To 79
+		Dim x2 As Float = x1 + 0.5
+		Dim y2 As Float = 2 * Cos(x2 / 10 * cPI)
+
+		Dim shape As lgBox2DEdgeShape
+		Dim V1, V2 As lgMathVector2
+		shape.set(V1.set(x1, y1), V2.set(x2, y2))
+		ground.createFixture2(shape, 0)
+		shape.dispose
+
+		x1 = x2
+		y1 = y2
+	Next
+
+	'Five shapes
+	Dim vertices(3) As lgMathVector2
+	vertices(0).set(-0.5, 0)
+	vertices(1).set(0.5, 0)
+	vertices(2).set(0, 1.5)
+	m_Polygons(0).set(vertices)
+
+	Dim vertices(3) As lgMathVector2
+	vertices(0).set(-0.1, 0)
+	vertices(1).set(0.1, 0)
+	vertices(2).set(0, 1.5)
+	m_Polygons(1).set(vertices)
+
+	Dim w As Float = 1
+	Dim b As Float = w / (2 + Sqrt(2))
+	Dim s As Float = Sqrt(2) * b
+	Dim vertices(8) As lgMathVector2
+	vertices(0).set(0.5 * s, 0)
+	vertices(1).set(0.5 * w, b)
+	vertices(2).set(0.5 * w, b + s)
+	vertices(3).set(0.5 * s, w)
+	vertices(4).set(-0.5 * s, w)
+	vertices(5).set(-0.5 * w, b + s)
+	vertices(6).set(-0.5 * w, b)
+	vertices(7).set(-0.5 * s, 0)
+	m_Polygons(2).set(vertices)
+	
+	m_Polygons(3).setAsBox(0.5, 0.5)
+
+	m_Circle.Radius = 0.5
+
+	'Ray cast callback
+	RCallback.Initialize("Box2D_ReportFixture")
+
+	'Default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(1.5 * Density)
+
+	'Font cache
+	FontCache.Initialize(Font)
+	FontCache.Color = FontCache.Color.WHITE
+	FontCache.SetText("Touch the screen to drop stuff", 0, lGdx.Graphics.Height)
+
+	'Input processor
+	LG_Input.Initialize("LG")
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	LG_Camera.Initialize2(Width / Scale, Height / Scale)
+	LG_Camera.Position.set(0, Height / 50, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	LG_Camera.Update
+
+	'Updates and draws the simulation with the coordinate system of the camera
+	LG_Update
+	Renderer.render(World.InternalObject, LG_Camera.Combined)
+
+	'Casts and draws the ray with the coordinate system of the camera
+	LG_ShapeRdr.ProjectionMatrix = LG_Camera.Combined
+	m_Fixture = Null
+	m_Pt1.set(0, 10)
+	m_Delta.set(25 * Cos(m_Angle), -25 * Abs(Sin(m_Angle)))
+	m_Pt2 = m_Pt1.cpy.add(m_Delta)
+	World.RayCast(RCallback, m_Pt1, m_Pt2)
+	If m_Fixture <> Null Then
+		LG_ShapeRdr.Begin(LG_ShapeRdr.SHAPETYPE_Line)
+			LG_ShapeRdr.SetColorRGBA(0.9, 0.9, 0.4, 1)
+			LG_ShapeRdr.Line(m_Pt1.X, m_Pt1.Y, m_Point.X, m_Point.Y)
+		LG_ShapeRdr.End
+		LG_ShapeRdr.Begin(LG_ShapeRdr.SHAPETYPE_Filled)
+			LG_ShapeRdr.SetColorRGBA(1, 0, 0, 1)
+			LG_ShapeRdr.Circle(m_Point.X, m_Point.Y, 0.3)
+		LG_ShapeRdr.End
+	Else
+		LG_ShapeRdr.Begin(LG_ShapeRdr.SHAPETYPE_Line)
+			LG_ShapeRdr.SetColorRGBA(1, 1, 1, 1)
+			LG_ShapeRdr.Line(m_Pt1.X, m_Pt1.Y, m_Pt2.X, m_Pt2.Y)
+		LG_ShapeRdr.End
+	End If
+
+	'Changes the coordinate system for the text (pixel based)
+	LG_Batch.ProjectionMatrix.setToOrtho2D(0, 0, lGdx.Graphics.Width, lGdx.Graphics.Height)
+
+	'Draws the text in the top left corner
+	LG_Batch.Begin
+	FontCache.Draw(LG_Batch)
+	LG_Batch.End
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+
+	'Updates the angle of the ray
+	m_Angle = m_Angle + (0.25 * cPI / 180)
+End Sub
+
+Sub Box2D_ReportFixture(Fixture As lgBox2DFixture, Point As lgMathVector2, Normal As lgMathVector2, Fraction As Float) As Float
+	m_Fixture = Fixture
+	m_Point = Point
+	Return Fraction 'Clips the ray to this point
+End Sub
+
+Sub LG_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If m_BodyIndex < e_MaxBodies Then
+		'Selects randomly a shape and drops it anywhere above the ground
+		Dim MU As lgMathUtils
+		Dim bd As lgBox2DBodyDef
+		bd.position.set(MU.RandomFloat2(-19, 19), MU.RandomFloat2(10, 20))
+		bd.angle = MU.RandomFloat2(-cPI, cPI)
+		bd.Type = World.BODYTYPE_Dynamic
+
+		Dim index As Int = Rnd(0, 5)
+		If index = 4 Then
+			bd.angularDamping = 0.02
+		End If
+
+		m_Bodies(m_BodyIndex) = World.CreateBody(bd)
+
+		Dim fd As lgBox2DFixtureDef
+		If index < 4 Then
+			fd.shape = m_Polygons(index)
+		Else
+			fd.shape = m_Circle
+		End If
+		fd.friction = 0.3
+		fd.Density = 20
+		m_Bodies(m_BodyIndex).createFixture(fd)
+
+		m_BodyIndex = m_BodyIndex + 1
+	End If
+	Return True
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Font.dispose
+	Renderer.dispose
+	World.dispose
+	LG_Batch.dispose
+	LG_ShapeRdr.dispose
+End Sub

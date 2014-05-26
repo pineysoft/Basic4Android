@@ -1,0 +1,141 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Chain
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim World As lgBox2DWorld
+	Dim Renderer As lgBox2DDebugRenderer
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Debug renderer
+	Renderer.Initialize2(True, True, False, False, False, False)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground
+	Dim bd As lgBox2DBodyDef
+	Dim ground As lgBox2DBody = World.createBody(bd)
+
+	Dim edgShape As lgBox2DEdgeShape
+	Dim V1, V2 As lgMathVector2
+	edgShape.set(V1.set(-40, 0), V2.set(40, 0))
+	ground.createFixture2(edgShape, 0)
+	edgShape.dispose
+
+	'Pole and chain
+	Dim shape As lgBox2DPolygonShape
+	shape.setAsBox(0.6, 0.125)
+
+	Dim fd As lgBox2DFixtureDef
+	fd.shape = shape
+	fd.Density = 20
+	fd.friction = 0.2
+
+	Dim jd As lgBox2DRevoluteJointDef
+	jd.collideConnected = False
+
+	Dim y As Float = 25
+	Dim prevBody As lgBox2DBody = ground
+	For i = 0 To 29
+		Dim bd As lgBox2DBodyDef
+		bd.Type = World.BODYTYPE_Dynamic
+		bd.position.set(0.5 + i, y)
+		Dim body As lgBox2DBody = World.createBody(bd)
+		body.createFixture(fd)
+
+		Dim anchor As lgMathVector2
+		anchor.set(i, y)
+		jd.initialize(prevBody, body, anchor)
+		World.createJoint(jd)
+
+		prevBody = body
+	Next
+	shape.dispose
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	Camera.Initialize2(Width / 16, Height / 16)
+	Camera.Position.set(0, Height / 40, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the simulation
+	LG_Update
+	Renderer.render(World.InternalObject, Camera.Combined)
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	World.dispose
+End Sub

@@ -1,0 +1,130 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: True
+	#IncludeTitle: True
+	#ApplicationLabel: Scn2D Touchpad
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Atlas As lgTextureAtlas
+	Dim Stage As lgScn2DStage
+	Dim Joystick As lgScn2DTouchpad
+	Dim PadStyle As lgScn2DTouchpadStyle
+	Dim Font As lgBitmapFont
+	Dim lblPercent As lgScn2DLabel
+	Dim lblStyle As lgScn2DLabelStyle
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("")
+
+	'Loads the touchpad's texture atlas
+	Atlas.InitializeWithFile("atlas/pad.pack")
+
+	'Creates the touchpad style
+	Dim Background As lgScn2DTextureRegionDrawable
+	Background = Atlas.CreateRegionDrawable("bkgd")
+	Dim Knob As lgScn2DTextureRegionDrawable
+	Knob = Atlas.CreateRegionDrawable("knob")
+	PadStyle.Initialize(Background, Knob)
+	PadStyle.SetKnobSize(18dip, 18dip)
+
+	'Creates a touchpad and places it in the middle of the screen
+	Joystick.Initialize(10dip, PadStyle, "Joystick")
+	Joystick.SetBounds(lGdx.Graphics.Width / 2 - 50dip, lGdx.Graphics.Height / 2 - 50dip, 100dip, 100dip)
+	Stage.AddActor(Joystick)
+
+	'Creates a label with the default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density)
+	lblStyle.Initialize(Font, Font.Color.LIGHT_GRAY)
+	lblPercent.Initialize("", lblStyle, "")
+	lblPercent.SetAlignment2(lblPercent.ALIGN_Center)
+	lblPercent.AutoPack = True
+	lblPercent.Visible = False
+	Stage.AddActor(lblPercent)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen with a color selected with the touchpad
+	GL.glClearColor(Abs(Joystick.KnobPercentX), _
+	                Max(Joystick.KnobPercentX + Joystick.KnobPercentY, 0), _
+	                Abs(Joystick.KnobPercentY), 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the actors
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Font.dispose
+	Stage.dispose
+	Atlas.dispose
+End Sub
+
+Sub Joystick_Changed(KnobX As Float, KnobY As Float, KnobPercentX As Float, KnobPercentY As Float)
+	'Displays the knob values around the touchpad and in the activity title
+	lblPercent.Text = "%X: " & Round(KnobPercentX * 100) & " / %Y: " & Round(KnobPercentY * 100)
+	lblPercent.X = (Stage.Width - lblPercent.Width) / 2 + (KnobPercentX * Joystick.Width * 1.15)
+	lblPercent.Y = (Stage.Height - lblPercent.Height + (KnobPercentY * Joystick.Height * 1.3)) / 2
+	lblPercent.Visible = (KnobPercentX <> 0 OR KnobPercentY <> 0)
+	lGdx.CallSubUI("Title_Update", "")
+End Sub
+
+Sub Title_Update(Param As Object)
+	Activity.Title = "Scn2D Touchpad / X=" & NumberFormat(Joystick.KnobX, 1, 2) _
+	                              & ", Y=" & NumberFormat(Joystick.KnobY, 1, 2)
+End Sub

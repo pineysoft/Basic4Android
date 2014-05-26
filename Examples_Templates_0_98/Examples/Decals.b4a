@@ -1,0 +1,154 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Decals
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: landscape
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim IP As lgInputProcessor
+	Dim Camera As lgPerspectiveCamera
+	Dim CameraGroupStrategy As lgCameraGroupStrategy
+	Dim Batch As lgDecalBatch
+	Dim Tex(5) As lgTexture
+	Dim TR(5) As lgTextureRegion
+	Dim Decal(5) As lgDecal
+	Dim LastX As Float
+	Dim Point, Y_Axis As lgMathVector3
+	Dim RotMatrix As lgMathMatrix4
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+
+	ToastMessageShow("Spin the decals with your finger.", True)
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the input processor
+	IP.Initialize("IP")
+
+	'Initializes the camera and its viewport
+	Camera.Initialize2(45, lGdx.Graphics.Width, lGdx.Graphics.Height)
+	Camera.Near = 1
+	Camera.Far = 300
+	Camera.Position.Set(0, 0, 5)
+
+	'Initializes the decal batch renderer
+	Batch.Initialize
+	CameraGroupStrategy.Initialize(Camera)
+	Batch.GroupStrategy = CameraGroupStrategy
+
+	'Creates the five decals
+	Tex(0).Initialize("wheel.png")    'Opaque
+	Tex(1).Initialize("badlogic.jpg") 'Opaque
+	Tex(2).Initialize("skate1.png")
+	Tex(3).Initialize("egg.png")
+	Tex(4).Initialize("smiley.png")
+	For i = 0 To Tex.Length - 1
+		Tex(i).SetFilter(Tex(i).FILTER_Linear, Tex(i).FILTER_Linear)
+		TR(i).InitializeWithTexture(Tex(i))
+		Decal(i).Initialize2(1, 1, TR(i), (i > 1))
+		Select i
+			Case 0: Decal(i).Position.Set(0, 0, 0)
+			Case 1: Decal(i).Position.Set(1.5, 0.5, -0.5)
+			Case 2: Decal(i).Position.Set(-1, 0.8, -1)
+			Case 3: Decal(i).Position.Set(-1, -0.3, -2)
+			Case 4: Decal(i).Position.Set(0.5, 0.5, -2)
+		End Select
+	Next
+
+	'Initializes the vector of the rotation axis
+	Y_Axis.Set(0, 1, 0)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(Bit.OR(GL.GL10_COLOR_BUFFER_BIT, GL.GL10_DEPTH_BUFFER_BIT))
+
+	'Enables the depth testing for better performance
+	GL.glEnable(GL.GL20_DEPTH_TEST)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Draws the decals
+	For i = 0 To Decal.Length - 1
+		Decal(i).LookAt(Camera.Position, Camera.Up) 'Billboarding
+		Batch.Add(Decal(i))
+	Next
+	Batch.Flush
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	For i = 0 To Tex.Length - 1
+		If Tex(i).IsInitialized Then
+			Tex(i).dispose
+		End If
+	Next
+	Batch.dispose
+	CameraGroupStrategy.dispose
+End Sub
+
+Sub IP_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If Pointer <> 0 Then Return False
+	LastX = ScreenX
+	Return True
+End Sub
+
+Sub IP_TouchDragged(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	If Pointer <> 0 Then Return False
+
+	'Rotates the camera on the Y axis
+	Point.Set(Camera.Position.X, Camera.Position.Y, Camera.Position.Z)
+	RotMatrix.setToRotation(Y_Axis, (LastX - ScreenX) / 5)
+	Point.Mul(RotMatrix)
+	Camera.Position.Set(Point.X, Point.y, Point.Z)
+	Camera.LookAt(0, 0, 0)
+	Camera.Update
+
+	LastX = ScreenX
+	Return True	
+End Sub

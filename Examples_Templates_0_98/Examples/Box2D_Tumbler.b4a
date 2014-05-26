@@ -1,0 +1,153 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX Tumbler
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+
+	Dim World As lgBox2DWorld
+	Dim Renderer As lgBox2DDebugRenderer
+
+	Dim m_count As Int
+	Dim MAX_NUM As Int = 200
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the LibGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Debug renderer
+	Renderer.Initialize2(True, True, False, False, False, False)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Rotating container
+	Dim bd As lgBox2DBodyDef
+	bd.Type = World.BODYTYPE_Dynamic
+	bd.allowSleep = False
+	bd.position.set(0, 10)
+	Dim body As lgBox2DBody = World.createBody(bd)
+
+	Dim pShape As lgBox2DPolygonShape
+	Dim V1, V2, V3, V4 As lgMathVector2
+	pShape.SetAsBox2(0.5, 10, V1.set(10, 0), 0)
+	body.createFixture2(pShape, 5)
+	pShape.SetAsBox2(0.5, 10, V2.set(-10, 0), 0)
+	body.createFixture2(pShape, 5)
+	pShape.SetAsBox2(10, 0.5, V3.set(0, 10), 0)
+	body.createFixture2(pShape, 5)
+	pShape.SetAsBox2(10, 0.5, V4.set(0, -10), 0)
+	body.createFixture2(pShape, 5)
+	pShape.dispose
+
+	Dim bd As lgBox2DBodyDef
+	Dim groundBody As lgBox2DBody = World.createBody(bd)
+
+	Dim jd As lgBox2DRevoluteJointDef
+	jd.bodyA = groundBody
+	jd.bodyB = body
+	jd.localAnchorA.set(0, 10)
+	jd.localAnchorB.set(0, 0)
+	jd.referenceAngle = 0
+	jd.motorSpeed = 0.05 * cPI
+	jd.maxMotorTorque = 1e8
+	jd.enableMotor = True
+	World.CreateJoint(jd)
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	Camera.Initialize2(Width / 16, Height / 16)
+	Camera.Position.set(0, Height / 50, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the simulation
+	LG_Update
+	Renderer.render(World.InternalObject, Camera.Combined)
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+
+	'Small boxes
+	If m_count < MAX_NUM Then
+		Dim bd As lgBox2DBodyDef
+		bd.Type = World.BODYTYPE_Dynamic
+		bd.position.set(0, 10)
+		Dim body As lgBox2DBody = World.CreateBody(bd)
+
+		Dim pShape As lgBox2DPolygonShape
+		pShape.SetAsBox(0.125, 0.125)
+		body.createFixture2(pShape, 1)
+		pShape.dispose
+
+		m_count = m_count + 1
+	End If
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Renderer.dispose
+	World.dispose
+End Sub

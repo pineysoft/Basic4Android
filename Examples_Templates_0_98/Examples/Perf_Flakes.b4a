@@ -1,0 +1,225 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=typFlake
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=3
+Library1=core
+Library2=libgdx
+Library3=reflection
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX_Perf_Flakes
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: true
+#End Region
+
+Sub Process_Globals
+	Type typFlake(Sprite As lgSprite, Speed As Float, Rotationspeed As Float)
+	Dim FPSLabelTimer As Timer
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim Batch As lgSpriteBatch
+	Dim Surface As View
+	Dim lblFPS As Label
+	Dim spinNumber As Spinner
+	Dim lstFlakes As List
+	Dim texDroid As lgTexture
+	Dim Quantity As Int
+End Sub
+
+Sub getMaxHeight() As Int
+	'Gets the max height between the spinner and the label
+	Dim r As Reflector
+	r.Target = spinNumber
+	If r.RunMethod("getHeight") = 0 Then DoEvents
+	Dim spinHeight As Int = r.RunMethod("getHeight")
+	r.Target = lblFPS
+	Return Max(spinHeight, r.RunMethod("getHeight"))
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.Title = "LibGDX - Performance"
+
+	'Creates the spinner for the number of flakes
+	spinNumber.Initialize("spinNumber")
+	spinNumber.TextSize = 20
+	For i = 1 To 150
+		spinNumber.Add(i * 20)
+	Next
+	Activity.AddView(spinNumber, 0, 0, -2, -2)
+
+	'Creates the label to show the FPS
+	lblFPS.Initialize("")
+	lblFPS.TextSize = 24
+	lblFPS.TextColor = Colors.Green
+	lblFPS.Text = "FPS"
+	Activity.AddView(lblFPS, 50%x, 0, -2, -2)
+
+	'Initializes the timer used to display the FPS count
+	FPSLabelTimer.Initialize("Timer", 500)
+
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the LibGDX surface
+	Surface = lGdx.InitializeView2(Config, "LG")
+	Activity.AddView(Surface, 0, getMaxHeight, 100%x, 100%y - getMaxHeight)
+End Sub
+
+Sub Activity_Resume
+	'Calls the Resume method of LibGDX
+	If lGdx.IsInitialized Then lGdx.Resume
+
+	'Starts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Calls the Pause method of LibGDX
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize2(3000)
+
+	'Loads the droid texture (75x90)
+	texDroid.Initialize("droid.png")
+	texDroid.SetFilter(texDroid.FILTER_Linear, texDroid.FILTER_Linear)
+
+	'Initializes the number of flakes
+	Quantity = spinNumber.SelectedItem
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(True)
+End Sub
+
+Sub CreateFlakes
+	'Stops the timer used to display the FPS count
+	FPSLabelTimer.Enabled = False
+
+	'Clears all previous flakes
+	If lstFlakes.IsInitialized Then
+		lstFlakes.Clear
+	Else
+		lstFlakes.Initialize
+	End If
+
+	Dim hwRatio As Float = texDroid.Height / texDroid.Width
+	Dim SprScaleX As Float
+	For i = 1 To Quantity
+		'Sizes each flake with a width between 5 and 55 and a proportional height
+		Dim NewFlake As typFlake: NewFlake.Initialize
+		NewFlake.Sprite.InitializeWithTexture(texDroid)
+		SprScaleX = (5 + Rnd(0, 50)) / texDroid.Width
+		NewFlake.Sprite.SetScale(SprScaleX, SprScaleX * hwRatio)
+
+		'Positions the flake horizontally between the left and right of the range
+		NewFlake.Sprite.X = Rnd(0, Surface.Width - NewFlake.Sprite.Width)
+
+		'Positions the flake vertically slightly off the top of the display
+		NewFlake.Sprite.Y = 0 - (NewFlake.Sprite.Height + Rnd(0, NewFlake.Sprite.Height))
+
+		'Each flake travels at 50-200 pixels per second
+		NewFlake.Speed = 50 + Rnd(0, 150)
+
+		'Flakes start at -90 to 90 degrees rotation, and rotate between -45 and 45 degrees per second
+		NewFlake.Sprite.Rotation = Rnd(0, 180) - 90
+		NewFlake.RotationSpeed = Rnd(0, 90) - 45
+
+		lstFlakes.Add(NewFlake)
+	Next
+	Log("Flakes = " & lstFlakes.Size)
+
+	'Resets the quantity
+	Quantity = 0
+
+	'Restarts the timer used to display the FPS count
+	FPSLabelTimer.Enabled = True
+End Sub
+
+Sub LG_Render
+	'Creates the flakes if not done
+	If Quantity > 0 Then
+		CreateFlakes
+	End If
+
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	Try
+		'Computes the new position and orientation of flakes
+		'If a flake falls off the bottom, it is sent back to the top
+		For i = 0 To lstFlakes.Size - 1
+			Dim myFlake As typFlake = lstFlakes.Get(i)
+			myFlake.Sprite.SetPosition(myFlake.Sprite.X, myFlake.Sprite.Y + (myFlake.Speed * lGdx.Graphics.DeltaTime))
+			If myFlake.Sprite.Y > Surface.Height Then
+				myFlake.Sprite.SetPosition(myFlake.Sprite.X, -myFlake.Sprite.Height)
+			End If
+			myFlake.Sprite.Rotation = myFlake.Sprite.Rotation + (myFlake.RotationSpeed * lGdx.Graphics.DeltaTime)
+		Next
+
+		'Draws the flakes with their new position and orientation
+		Batch.Begin
+			For i = 0 To lstFlakes.Size - 1
+				Dim myFlake As typFlake = lstFlakes.Get(i)
+				myFlake.Sprite.Draw(Batch)
+			Next
+		Batch.End
+	Catch
+		Log(LastException.Message)
+	End Try
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources used by lgTexture and lgSpriteBatch
+	texDroid.dispose	
+	Batch.dispose
+End Sub
+
+Sub spinNumber_ItemClick(Position As Int, Value As Object)
+	'Changes the number of flakes
+	Quantity = Value
+End Sub
+
+Sub Timer_Tick
+	'Displays the FPS
+	lblFPS.Text = "FPS:" & lGdx.Graphics.FramesPerSecond
+End Sub

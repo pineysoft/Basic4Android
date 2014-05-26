@@ -1,0 +1,239 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~SetActivityAttribute(Main, android:hardwareAccelerated, "true")~\n~
+UserTypesHint=typSkater
+NumberOfFiles=4
+File1=background.jpg
+File2=skate1.png
+File3=skate2.png
+File4=skate3.png
+NumberOfLibraries=3
+Library1=betterdialogs
+Library2=core
+Library3=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGdx_Perf_Skaters
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+	Type typSkater(Tex As lgTexture, X As Float, Y As Float, velocityX As Float, velocityY As Float)
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Batch As lgSpriteBatch
+	Dim Camera As lgOrthographicCamera
+
+	Dim texBackground As lgTexture
+	Dim NbOfRepetitionsX, NbOfRepetitionsY As Int
+	Dim xBkGd As Float
+	Dim texSkaters(3) As lgTexture
+	Dim lstSkaters As lgArray
+	Dim IBP As BD_InputBoxParams
+	Dim Font As lgBitmapFont
+	Dim lastJumbleTime As Long
+
+	Dim COEFFICIENT_OF_RESTITUTION As Float = 0.75
+	Dim SPEED_OF_GRAVITY As Int = 150
+	Dim JUMBLE_EVERYTHING_DELAY As Int = 15 * 1000
+	Dim MAX_VELOCITY As Int = 8000
+End Sub
+
+'-----------------------------------------------------------------------
+'This demo requires the Better Dialogs library:
+'http://www.basic4ppc.com/android/forum/threads/lib-betterdialogs.30739/
+'-----------------------------------------------------------------------
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.Title = "Performance - Skaters"
+	Activity.Color = Colors.Blue
+End Sub
+
+Sub Activity_Resume
+	If IBP.Answer = "" Then
+		'How many skaters ?
+		IBP.InputType = IBP.INPUT_TYPE_NUMBERS
+		IBP.Default = 250
+		IBP.Gravity = Gravity.CENTER_HORIZONTAL
+		IBP.ValidationCallback = "Check_Max"
+		Dim BD As BetterDialogs
+		If BD.InputBox("Number of skaters ?", IBP, "OK", "", "", Null) <> DialogResponse.POSITIVE Then
+			Activity.Finish
+			Return
+		End If
+
+		'Disables the accelerometer and the compass
+		Dim Config As lgConfiguration
+		Config.useAccelerometer = False
+		Config.useCompass = False
+
+		'Creates the libGDX surface
+		lGdx.Initialize2(Config, "LG")
+	End If
+
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub Check_Max(Answer As String, CompactAnswer As String) As String
+	If Not(IsNumber(Answer)) OR Answer < 1 Then
+		Return "Invalid value"
+	End If
+	If Answer > 5400 Then
+		Return "Max value: 5400"
+	End If
+	Return ""
+End Sub
+
+Sub CreateSkaters(Count As Int)
+	'Creates the skaters
+	Dim robotBucketSize As Int = Count / 3
+	For i = 1 To Count
+		Dim Skater As typSkater
+		Skater.Initialize
+		If (i < robotBucketSize) Then
+			Skater.Tex = texSkaters(0)
+		Else If (i < robotBucketSize * 2) Then
+			Skater.Tex = texSkaters(1)
+		Else
+			Skater.Tex = texSkaters(2)
+		End If
+		Skater.X = Rnd(0, lGdx.Graphics.Width - Skater.Tex.Width)
+		Skater.Y = Rnd(0, lGdx.Graphics.Height - Skater.Tex.Height)
+		lstSkaters.Add(Skater)
+	Next
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize2(IBP.Answer)
+
+	'Loads the background texture (will be repeated)
+	texBackground.Initialize("background.jpg")
+	texBackground.SetWrap(texBackground.WRAP_Repeat, texBackground.WRAP_Repeat)
+
+	'Loads the skaters textures
+	texSkaters(0).Initialize("skate1.png")
+	texSkaters(1).Initialize("skate2.png")
+	texSkaters(2).Initialize("skate3.png")
+
+	'Creates the skaters
+	lstSkaters.Initialize2(IBP.Answer)
+	CreateSkaters(IBP.Answer)
+
+	'Creates a BitmapFont from the LiquidCrystal font file
+	Dim FG As lgFontGenerator
+	Font = FG.CreateFont("font/liquidcrystal.otf", 24 * Density, "FPS:0123456789")
+	Font.SetColorRGBA(1, 1, 1, 1) 'White
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+
+	'Computes the number of repetitions of the background tile to cover the whole screen
+	NbOfRepetitionsX = Width / texBackground.Width
+	NbOfRepetitionsY = Height / texBackground.Height
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	'Updates the position of skaters
+	LG_Update
+
+	'Renders the (repeated) background and draws the skaters with their new position
+	Batch.Begin
+	Batch.DrawTex3(texBackground, 0, 0, lGdx.Graphics.Width, lGdx.Graphics.Height, xBkGd, NbOfRepetitionsY, xBkGd + NbOfRepetitionsX, 0)
+	Dim Skater As typSkater
+	For i = 0 To lstSkaters.Size - 1
+		Skater = lstSkaters.Get(i)
+		Batch.DrawTex(Skater.Tex, Skater.X, Skater.Y)
+	Next
+	Font.Draw(Batch, "FPS:" & lGdx.Graphics.FramesPerSecond, 8dip, lGdx.Graphics.Height - 10dip)
+	Batch.End
+End Sub
+
+Sub LG_Update
+	'Is it time to jumble?
+	Dim jumble As Boolean = (DateTime.Now - lastJumbleTime > JUMBLE_EVERYTHING_DELAY)
+	If jumble Then lastJumbleTime = DateTime.Now
+
+	'Computes the new position of each skater
+	Dim timeDeltaSeconds As Float = lGdx.Graphics.DeltaTime
+	For i = 0 To lstSkaters.Size - 1
+		Dim Skater As typSkater = lstSkaters.Get(i)
+
+		'Jumble! Applies random velocities
+		If (jumble) Then
+			Skater.velocityX = Skater.velocityX + (MAX_VELOCITY / 2) - Rnd(0, MAX_VELOCITY)
+			Skater.velocityY = Skater.velocityY + (MAX_VELOCITY / 2) - Rnd(0, MAX_VELOCITY)
+		End If
+
+		'Moves the skaters
+		Skater.X = Skater.X + (Skater.velocityX * timeDeltaSeconds)
+		Skater.Y = Skater.Y + (Skater.velocityY * timeDeltaSeconds)
+
+		'Applies gravity
+		Skater.velocityY = Skater.velocityY - (SPEED_OF_GRAVITY * timeDeltaSeconds)
+
+		'Bounces
+		If (Skater.X < 0 AND Skater.velocityX < 0) OR (Skater.X > lGdx.Graphics.Width - Skater.Tex.Width AND Skater.velocityX > 0) Then
+			Skater.velocityX = -Skater.velocityX * COEFFICIENT_OF_RESTITUTION
+			Skater.X = Max(0, Min(Skater.X, lGdx.Graphics.Width - Skater.Tex.Width))
+			If Abs(Skater.velocityX) < 0.1 Then Skater.velocityX = 0
+		End If
+		If (Skater.Y < 0 AND Skater.velocityY < 0) OR (Skater.Y > lGdx.Graphics.Height - Skater.Tex.Height AND Skater.velocityY > 0) Then
+			Skater.velocityY = -Skater.velocityY * COEFFICIENT_OF_RESTITUTION
+			Skater.Y = Max(0, Min(Skater.Y, lGdx.Graphics.Height - Skater.Tex.Height))
+			If Abs(Skater.velocityY) < 0.1 Then Skater.velocityY = 0
+		End If
+	Next
+
+	'Shifts the portion of texture used for the background so the background scrolls endlessly
+	xBkGd = xBkGd - (lGdx.Graphics.DeltaTime * 3)
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources used by lgTexture, lgBitmapFont and lgSpriteBatch
+	texBackground.dispose
+	For i = 0 To 2
+		texSkaters(i).dispose
+	Next
+	Font.dispose
+	Batch.dispose
+End Sub

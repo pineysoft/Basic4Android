@@ -1,0 +1,153 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=3
+Library1=core
+Library2=libgdx
+Library3=randomaccessfile
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Sockets
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim IP As lgInputProcessor
+	Dim Batch As lgSpriteBatch
+	Dim Font As lgBitmapFont
+	Dim MsgLog As String
+	Dim sktClient As lgSocket
+	Dim sktServer As lgServerSocket
+	Dim strmClient, strmServer As AsyncStreams
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+
+	'Explains how to use the demo
+	ToastMessageShow("Touch the screen to connect to the server", True)
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Sets the InputProcessor
+	IP.Initialize("IP")
+
+	'Initializes the renderer
+	Batch.Initialize
+
+	'Loads the default font
+	Font.Initialize
+	Font.SetTextureFilter(Font.FILTER_Linear, Font.FILTER_Linear)
+	Font.Scale(Density * 1.5)
+	Font.Color = Font.Color.GREEN
+
+	'Creates a server socket
+	Dim ssHints As lgServerSocketHints
+	ssHints.acceptTimeout = 30000 '30 seconds
+	ssHints.reuseAddress = True
+	sktServer = lGdx.Net.NewTCPServerSocket(9999, ssHints)
+
+	'Listens to incoming connections
+	sktServer.Listen("Server")
+	MsgLog = "Listening to incoming connections..."
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Draws the log
+	Batch.Begin
+	Font.DrawMultiLine(Batch, MsgLog, 10dip, lGdx.Graphics.Height - 10dip)
+	Batch.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Closes the sockets
+	If sktClient <> Null Then sktClient.dispose
+	If sktServer <> Null Then sktServer.dispose
+
+	'Disposes the resources
+	Font.dispose
+	Batch.dispose
+End Sub
+
+Sub AddToLog(Message As String)
+	MsgLog = MsgLog & CRLF & Message
+	Log(Message)
+End Sub
+
+Sub IP_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	'Creates a client socket
+	If sktClient.isConnected Then Return True
+	AddToLog("[Client] Connecting...")
+	sktClient = lGdx.Net.NewTCPClientSocket("localhost", 9999, Null)
+	If sktClient.isConnected Then
+		'Sends "hello" to the server
+		strmClient.Initialize(sktClient.InputStream, sktClient.OutputStream, "Client")
+		Dim strHello As String = "Hello, I'm the client (" & sktClient.RemoteAddress & ")"
+		strmClient.Write(strHello.GetBytes("UTF8"))
+	End If
+	Return True
+End Sub
+
+Sub Client_NewData(Buffer() As Byte)
+	'Data received from the server
+	AddToLog("[Client] Received: " & BytesToString(Buffer, 0, Buffer.Length, "UTF8"))
+End Sub
+
+Sub Server_NewConnection(ClientSocket As lgSocket)
+	'Sends "hello" to the client
+	AddToLog("[Server] New connection")
+	strmServer.Initialize(ClientSocket.InputStream, ClientSocket.OutputStream, "Server")
+	strmServer.Write("Hello, I'm the server".GetBytes("UTF8"))
+End Sub
+
+Sub Server_NewData(Buffer() As Byte)
+	'Data received from the client
+	AddToLog("[Server] Received: " & BytesToString(Buffer, 0, Buffer.Length, "UTF8"))
+End Sub
+
+Sub Server_Timeout
+	AddToLog("[Server] Timeout!")
+
+	'New attempt
+	sktServer.Listen("Server")
+	AddToLog("Listening to incoming connections...")
+End Sub

@@ -1,0 +1,164 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: ShaderProg Light
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+'-----------------------------------------------------------
+'There's a tutorial online for this demo:
+'https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson6
+'-----------------------------------------------------------
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Batch As lgSpriteBatch
+	Dim Camera As lgOrthographicCamera
+	Dim TexRock, TexRockNormal As lgTexture
+	Dim TexWidth, TexHeight As Float
+	Dim Shader As lgShaderProgram
+
+	'Constants
+	Dim DEFAULT_LIGHT_Z As Float = 0.075
+	Dim AMBIENT_INTENSITY As Float = 0.2
+	Dim LIGHT_INTENSITY As Float = 1
+
+	'Light position
+	Dim LIGHT_POS As lgMathVector3
+	LIGHT_POS.Set(0, 0, DEFAULT_LIGHT_Z)
+
+	'Light RGB
+	Dim LIGHT_COLOR As lgMathVector3
+	LIGHT_COLOR.Set(1, 0.8, 0.6)
+
+	'Ambient RGB
+	Dim AMBIENT_COLOR As lgMathVector3
+	AMBIENT_COLOR.Set(0.6, 0.6, 1)
+
+	'Attenuation coefficients for light falloff
+	Dim FALLOFF As lgMathVector3
+	FALLOFF.Set(0.4, 3, 20)
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Loads the texture and its normal map
+	TexRock.Initialize("rock.png")
+	TexRockNormal.Initialize("rocknormal.png")
+
+	'Compiles the ShaderProgram
+	Shader.Pedantic = False
+	Shader.InitializeWithFiles(lGdx.Files.Internal("shaderprog/vertex.txt"), _
+	                           lGdx.Files.Internal("shaderprog/fragment.txt"))
+
+	'Is it compiled?
+	If Not(Shader.IsCompiled) Then
+		Log("Could not compile shader: " & Shader.Log)
+		Return
+	End If
+
+	'Logs any warning
+	If Shader.Log.Length <> 0 Then
+		Log(Shader.Log)
+	End If
+
+	'Setups default uniforms
+	Shader.Begin
+	Shader.SetUniform1i("u_normals", 1)
+	Shader.SetUniform4f("LightColor", LIGHT_COLOR.x, LIGHT_COLOR.y, LIGHT_COLOR.z, LIGHT_INTENSITY)
+	Shader.SetUniform4f("AmbientColor", AMBIENT_COLOR.x, AMBIENT_COLOR.y, AMBIENT_COLOR.z, AMBIENT_INTENSITY)
+	Shader.SetUniform3f("Falloff", FALLOFF.x, FALLOFF.y, FALLOFF.y)
+	Shader.End
+
+	'Initializes the renderer
+	Batch.Initialize3(1000, Shader)
+	Batch.Shader = Shader
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Initializes the camera
+	Camera.Initialize
+	Camera.SetToOrtho2(False, Width, Height)
+
+	'Uses the position and the coordinate system of the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	'Scales the image to fit the smallest dimension
+	TexWidth = Max(Camera.ViewportWidth, TexRock.Width * Density)
+	TexHeight = Max(Camera.ViewportHeight, TexRock.Height * Density)
+	If TexWidth < TexHeight Then
+		TexHeight = TexWidth / TexRock.Width * TexRock.Height
+	Else
+		TexWidth = TexHeight / TexRock.Height * TexRock.Width
+	End If
+
+	'Resizes the shader
+	Shader.Begin
+	Shader.SetUniform2f("Resolution", Width, Height)
+	Shader.End
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates light position, normalized to screen resolution
+	LIGHT_POS.X = lGdx.Input.X / lGdx.Graphics.Width
+	LIGHT_POS.Y = 1 - (lGdx.Input.Y / lGdx.Graphics.Height)
+
+	'Draws the texture with the shader effect applied
+	Batch.Begin
+	Shader.SetUniform3f("LightPos", LIGHT_POS.x, LIGHT_POS.y, LIGHT_POS.z)
+	TexRockNormal.Bind2(1)
+	TexRock.Bind2(0)
+	Batch.DrawTex2(TexRock, 0, Camera.ViewportHeight - TexHeight, TexWidth, TexHeight)
+	Batch.End
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes the resources
+	Batch.dispose
+	TexRock.dispose
+	TexRockNormal.dispose
+	Shader.dispose
+End Sub

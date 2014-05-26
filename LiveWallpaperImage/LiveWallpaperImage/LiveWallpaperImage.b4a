@@ -1,0 +1,49 @@
+﻿Version=3.5
+IconFile=
+NumberOfModules=1
+Module1=WallpaperService
+ModuleVisible1=1
+Package=anywheresoftware.b4a.samples.livewallpaperimage
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" />~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~~\n~AddApplicationText(~\n~<!-- ******** Add the internal service declaration - you can change android:label  ******* -->~\n~<service~\n~        android:label="Image Livewallpaper" ~\n~        android:name="anywheresoftware.b4a.objects.WallpaperInternalService"~\n~        android:permission="android.permission.BIND_WALLPAPER">~\n~        <intent-filter>~\n~            <action android:name="android.service.wallpaper.WallpaperService" />~\n~        </intent-filter>~\n~        <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper" />~\n~</service>~\n~)
+UserTypesHint=
+NumberOfFiles=2
+File1=1.bal
+File2=drawboardportrait_complete.png
+NumberOfLibraries=3
+Library1=core
+Library2=livewallpaper
+Library3=phone
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: LiveWallpaper Image
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+
+End Sub
+
+Sub Globals
+
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	ToastMessageShow("Please go to the home screen and add the Live Wallpaper.", True)
+	Activity.Finish
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+

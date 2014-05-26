@@ -1,0 +1,125 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.libgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: True
+	#ApplicationLabel: Test LibGDX
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+'Activity module
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Stage As lgScn2DStage
+	Dim Table As lgScn2DTable
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Initializes libGDX
+	lGdx.Initialize("LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the stage
+	Stage.Initialize("ST")
+
+	'Adds a capture listener to the stage to filter the input events
+	Dim IL As lgScn2DInputListener
+	IL.Initialize("ST")
+	Stage.AddCaptureListener(IL)
+
+	'Creates the main table
+	Table.Initialize("Table")
+	Table.FillParent = True
+	Stage.AddActor(Table)
+
+	'...
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the stage viewport
+	Stage.SetViewport(Width, Height, True)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Applies the actions to actors
+	Stage.Act
+
+	'Draws the actors
+	Stage.Draw
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	Stage.dispose
+	'...
+End Sub
+
+Sub ST_Enter(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int, FromActor As lgScn2DActor)
+	'...
+End Sub
+
+Sub ST_Exit(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int, ToActor As lgScn2DActor)
+	'...
+End Sub
+
+Sub ST_KeyDown(Event As lgScn2DInputEvent, KeyCode As Int)
+	'...
+End Sub
+
+Sub ST_KeyUp(Event As lgScn2DInputEvent, KeyCode As Int)
+	'...
+End Sub
+
+Sub ST_KeyTyped(Event As lgScn2DInputEvent, Character As Char)
+	'...
+End Sub
+
+Sub ST_TouchDown(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	'...
+	Event.Handle
+End Sub
+
+Sub ST_TouchDragged(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	'...
+End Sub
+
+Sub ST_TouchUp(Event As lgScn2DInputEvent, X As Float, Y As Float, Pointer As Int)
+	'...
+End Sub

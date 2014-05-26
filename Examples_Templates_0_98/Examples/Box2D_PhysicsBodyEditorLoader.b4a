@@ -1,0 +1,167 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
+UserTypesHint=
+NumberOfFiles=0
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX BodyEditorLoader
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim Camera As lgOrthographicCamera
+	Dim World As lgBox2DWorld
+	Dim DbgRenderer As lgBox2DDebugRenderer
+	Dim Batch As lgSpriteBatch
+	Dim Bodies(3) As lgBox2DBody
+	Dim Textures(3) As lgTexture
+	Dim Sprites(3) As lgSprite
+	Dim Conversion As lgMathUtils
+	Dim Scale As Int = 10
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Renderers
+	Batch.Initialize
+	DbgRenderer.Initialize2(True, False, False, True, False, False)
+
+	'World
+	Dim vGravity As lgMathVector2
+	World.Initialize(vGravity.set(0, -10), True, "")
+	World.SetContinuousPhysics(True)
+	World.SetWarmStarting(True)
+
+	'Ground
+	Dim bd As lgBox2DBodyDef
+	Dim ground As lgBox2DBody = World.createBody(bd)
+
+	Dim edgShape As lgBox2DEdgeShape
+	Dim V1, V2 As lgMathVector2
+	edgShape.set(V1.set(-3 * Scale, -Scale), V2.set(3 * Scale, -Scale))
+	ground.createFixture2(edgShape, 0)
+	edgShape.dispose
+
+	'Three complex shapes created with Physics Body Editor v2.9.2
+	'Manual: http://www.aurelienribon.com/blog/projects/physics-body-editor/
+	'Download: http://code.google.com/p/box2d-editor/downloads/list
+	Dim Loader As lgBox2DBodyEditorLoader
+	Loader.InitializeWithFile("shapes/test.json")
+	Dim L As List = Loader.SortedList
+	For i = 0 To L.Size - 1
+		'1. Create a BodyDef, as usual:
+		Dim bd As lgBox2DBodyDef
+		bd.Position.Set(i * -5.8, (2 - i) * 16)
+		bd.Type = World.BODYTYPE_Dynamic
+
+		'2. Create a FixtureDef, as usual:
+		Dim fd As lgBox2DFixtureDef
+		fd.Density = 1
+		fd.Friction = 0.5
+		fd.Restitution = 0.2
+
+		'3. Create a Body, as usual:
+		Bodies(i) = World.CreateBody(bd)
+
+		'4. Create the body fixture automatically by using the Loader:
+		Loader.AttachFixture(Bodies(i), L.Get(i), fd, Scale)
+
+		'5. Load the associated image:
+		Textures(i).Initialize("shapes/" & Loader.GetImagePath(L.Get(i)))
+		Sprites(i).InitializeWithTexture(Textures(i))
+		Sprites(i).SetSize(Scale, Scale * Sprites(i).Height / Sprites(i).Width)
+		Dim Origin As lgMathVector2
+		Origin = Loader.GetOrigin(L.Get(i), Scale)
+		Sprites(i).SetOrigin(Origin.X, Origin.Y)
+	Next
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport and position
+	Camera.Initialize2(Scale * 4, Scale * 4 * Height / Width)
+	Camera.Position.set(0, Scale, 0)
+End Sub
+
+Sub LG_Render
+	'Clears the screen
+	GL.glClearColor(0.3, 0.3, 0.3, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Updates and draws the simulation
+	LG_Update
+	Batch.ProjectionMatrix = Camera.Combined
+	Batch.Begin
+	For i = 0 To Sprites.Length - 1
+		Sprites(i).Draw(Batch)
+	Next
+	Batch.End
+	DbgRenderer.Render(World.InternalObject, Camera.Combined)
+End Sub
+
+Sub LG_Update
+	World.Step(1/60, 8, 3)
+	For i = 0 To Sprites.Length - 1
+		Sprites(i).X = Bodies(i).Position.X - Sprites(i).OriginX
+		Sprites(i).Y = Bodies(i).Position.Y - Sprites(i).OriginY
+		Sprites(i).Rotation = Bodies(i).Angle * Conversion.radiansToDegrees
+	Next
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all resources
+	For i = 0 To Textures.Length - 1
+		Textures(i).Dispose
+	Next
+	Batch.dispose
+	DbgRenderer.dispose
+	World.dispose
+End Sub

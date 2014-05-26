@@ -1,0 +1,147 @@
+﻿Version=3.2
+IconFile=
+NumberOfModules=0
+Package=flm.b4a.lgdxtest
+DoNotOverwriteManifest=False
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~AddPermission(android.permission.WRITE_EXTERNAL_STORAGE )~\n~
+UserTypesHint=
+NumberOfFiles=1
+File1=smiley.png
+NumberOfLibraries=2
+Library1=core
+Library2=libgdx
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: lGDX FrameBuffer
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: true
+	#IncludeTitle: false
+#End Region
+
+Sub Process_Globals
+End Sub
+
+Sub Globals
+	Dim lGdx As LibGDX
+	Dim GL As lgGL
+	Dim IP As lgInputProcessor
+	Dim Batch As lgSpriteBatch
+	Dim Camera As lgOrthographicCamera
+	Dim FBO As lgFrameBuffer
+	Dim texRegionFBO As lgTextureRegion
+	Dim texSmiley As lgTexture
+	Dim lstSmileys As List
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Disables the accelerometer and the compass
+	Dim Config As lgConfiguration
+	Config.useAccelerometer = False
+	Config.useCompass = False
+
+	'Creates the libGDX surface
+	lGdx.Initialize2(Config, "LG")
+End Sub
+
+Sub Activity_Resume
+	'Informs libGDX of Resume events
+	If lGdx.IsInitialized Then lGdx.Resume
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'Informs libGDX of Pause events
+	If lGdx.IsInitialized Then lGdx.Pause
+End Sub
+
+Sub LG_Create
+	'Initializes the sprite batcher
+	Batch.Initialize
+
+	'Initializes the input processor
+	IP.Initialize("IP")
+
+	'Loads the smiley image (64x64)
+	texSmiley.Initialize("smiley.png")
+
+	'Creates a list of 1000 smileys
+	lstSmileys.Initialize
+	For i = 1 To 1000
+		Dim Smiley As lgMathGridPoint2
+		Smiley.X = Rnd(64dip * 0.2, lGdx.Graphics.Width - (64dip * 1.2))
+		Smiley.Y = Rnd(64dip * 0.2, lGdx.Graphics.Height - (64dip * 1.2))
+		lstSmileys.Add(Smiley)
+	Next
+End Sub
+
+Sub LG_Resize(Width As Int, Height As Int)
+	'Sets the camera viewport
+	Camera.Initialize
+	Camera.SetToOrtho(False)
+
+	'Initializes the FrameBuffer object
+	FBO.Initialize(FBO.FORMAT_RGBA8888, Width, Height)
+End Sub
+
+Sub LG_Render
+	'Clears the screen and colors the background in blue
+	GL.glClearColor(0, 0, 0.4, 1)
+	GL.glClear(GL.GL10_COLOR_BUFFER_BIT)
+
+	'Updates the matrices of the camera
+	Camera.Update
+
+	'Uses the coordinate system specified by the camera
+	Batch.ProjectionMatrix = Camera.Combined
+
+	'1st rendering: the smileys are rendered one by one to a texture
+	If Not(texRegionFBO.IsInitialized) Then
+		FBO.Begin
+		Batch.Begin
+
+		Dim Smiley As lgMathGridPoint2
+		For i = 0 To lstSmileys.Size - 1
+			Smiley = lstSmileys.Get(i)
+			Batch.DrawTex2(texSmiley, Smiley.X, Smiley.Y, 64dip, 64dip)
+		Next
+
+		Batch.End
+		FBO.End
+
+		texRegionFBO.InitializeWithTexture(FBO.ColorBufferTexture)
+		texRegionFBO.Flip(False, True)
+	End If
+
+	'The smileys are drawn all at once by using the texture
+	Batch.Begin
+	Batch.DrawRegion(texRegionFBO, 0, 0)
+	Batch.End
+End Sub
+
+Sub IP_TouchDown(ScreenX As Int, ScreenY As Int, Pointer As Int) As Boolean
+	'Saves a screenshot to the external storage
+	Dim Pixmap As lgPixmap = FBO.GetDefaultFrameBufferPixmap(0, 0, lGdx.Graphics.Width, lGdx.Graphics.Height, True)
+	Dim PixmapIO As lgPixmapIO
+	PixmapIO.WritePNG(lGdx.Files.external("screenshot.png"), Pixmap)
+	Pixmap.dispose
+	Return True
+End Sub
+
+Sub LG_Resume
+End Sub
+
+Sub LG_Pause
+End Sub
+
+Sub LG_Dispose
+	'Disposes all used resources
+	If texSmiley.IsInitialized Then texSmiley.dispose
+	If FBO.IsInitialized Then FBO.dispose
+	If Batch.IsInitialized Then Batch.dispose
+End Sub

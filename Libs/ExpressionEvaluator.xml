@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <doclet-version-NOT-library-version>1.00</doclet-version-NOT-library-version>
+    <class>
+        <name>anywheresoftware.b4a.agraham.expressionevaluator.Evaluator</name>
+        <shortname>Evaluator</shortname>
+        <comment>This class contains an arithmetic expression evaluator. 
+It supports the arithmetic sub-set of the full Basic4android language.
+
+Operators in precedence order are 
+
+  ^ : exponent
+  * / mod : multiply, divide and modulus, % is also accepted for mod
+  + - : add and subtract
+  
+Functions supported are
+  
+ COS(r), SIN(r), TAN(r), ACOS(n), ASIN(n), ATAN(n) : radians
+ COSD(d), SINDd), TANDd), ACOSD(n), ASIND(n), ATAND(n) : degrees
+ LN(n) base e, LOG(n) base 10, LOGARITHM(n, base) any base
+ SQRT(n), FLOOR(n), ABS(n), MAX(n1, n2), MIN(n1, n2), POWER(n, exp), ROUND(n)
+  
+Constants recognised are
+ CPI : Pi
+ CE : e
+   
+Twenty-six case-insensitive variables are supported named from "A" to "Z" and must be intialised with the required value before being used in an evaluation.
+Although the actual variable names are a single letter longer names are accepted but only the initial letter is used to identify the variable.
+Variable values are maintained across evaluations.</comment>
+        <owner>process</owner>
+        <method>
+            <name>Initialize</name>
+            <comment>Initialise the Evaluator.</comment>
+            <returntype>void</returntype>
+        </method>
+        <method>
+            <name>SetGlobal</name>
+            <comment>Sets the contents of the variable named var to value.
+Twenty-six case-insensitive variables are supported named from "A" to "Z" longer names are accepted but only the initial letter is used.</comment>
+            <returntype>void</returntype>
+            <parameter>
+                <name>var</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>value</name>
+                <type>double</type>
+            </parameter>
+        </method>
+        <method>
+            <name>EvaluateAndSave</name>
+            <comment>Evaluate the supplied expression and return the result also saving it in the specified variable.</comment>
+            <returntype>double</returntype>
+            <parameter>
+                <name>expression</name>
+                <type>java.lang.String</type>
+            </parameter>
+            <parameter>
+                <name>var</name>
+                <type>java.lang.String</type>
+            </parameter>
+        </method>
+        <method>
+            <name>Evaluate</name>
+            <comment>Evaluate the supplied expression and return the result.
+If an error occurs zero is returned and the Error property will contain the reason.</comment>
+            <returntype>double</returntype>
+            <parameter>
+                <name>expression</name>
+                <type>java.lang.String</type>
+            </parameter>
+        </method>
+        <method>
+            <name>GetGlobal</name>
+            <comment>Returns the value of the variable specified.
+Twenty-six case-insensitive variables are supported named from "A" to "Z" longer names are accepted but only the initial letter is used.</comment>
+            <returntype>double</returntype>
+            <parameter>
+                <name>var</name>
+                <type>java.lang.String</type>
+            </parameter>
+        </method>
+        <property>
+            <name>ErrorFlag</name>
+            <returntype>boolean</returntype>
+            <comment>Returns True if an error occured in the last call to Evaluate otherwise returns False.</comment>
+        </property>
+        <property>
+            <name>Version</name>
+            <returntype>double</returntype>
+            <comment>Returns the version number of the library.</comment>
+        </property>
+        <property>
+            <name>Error</name>
+            <returntype>java.lang.String</returntype>
+            <comment>Returns the error if any of the last evaluation otherwise returns an empty string.
+If the error is a NullPointerException or a StringIndexException then the evaluated expression was ill-formed.</comment>
+        </property>
+    </class>
+    <version>1.1</version>
+    <comment>This library includes an Evaluator object that can evaluate arithmetic expressions.</comment>
+    <author>Andrew Graham</author>
+</root>
