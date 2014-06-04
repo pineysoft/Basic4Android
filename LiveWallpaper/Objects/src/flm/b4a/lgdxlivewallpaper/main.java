@@ -24,7 +24,7 @@ public class main extends Activity implements B4AActivity{
     ActivityWrapper _activity;
     java.util.ArrayList<B4AMenuItem> menuItems;
 	public static final boolean fullScreen = false;
-	public static final boolean includeTitle = true;
+	public static final boolean includeTitle = false;
     public static WeakReference<Activity> previousOne;
 
 	@Override
@@ -209,6 +209,7 @@ public class main extends Activity implements B4AActivity{
 	}
 	@Override
 	public void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
 		this.setIntent(intent);
 	}
     @Override 
@@ -264,29 +265,40 @@ public class main extends Activity implements B4AActivity{
 	}
 
 public anywheresoftware.b4a.keywords.Common __c = null;
-public flm.b4a.lgdxlivewallpaper.wallpaperservice _wallpaperservice = null;
+public anywheresoftware.b4a.objects.ButtonWrapper _btnsetwallpaper = null;
+public flm.b4a.lgdxlivewallpaper.wallpaperservice _vvv4 = null;
 
 public static boolean isAnyActivityVisible() {
     boolean vis = false;
 vis = vis | (main.mostCurrent != null);
 return vis;}
 public static String  _activity_create(boolean _firsttime) throws Exception{
- //BA.debugLineNum = 22;BA.debugLine="Sub Activity_Create(FirstTime As Boolean)";
- //BA.debugLineNum = 24;BA.debugLine="ToastMessageShow(\"Please go to the home screen and add the Live Wallpaper.\", True)";
-anywheresoftware.b4a.keywords.Common.ToastMessageShow("Please go to the home screen and add the Live Wallpaper.",anywheresoftware.b4a.keywords.Common.True);
- //BA.debugLineNum = 25;BA.debugLine="Activity.Finish";
-mostCurrent._activity.Finish();
- //BA.debugLineNum = 26;BA.debugLine="End Sub";
+ //BA.debugLineNum = 23;BA.debugLine="Sub Activity_Create(FirstTime As Boolean)";
+ //BA.debugLineNum = 27;BA.debugLine="Activity.LoadLayout(\"SStars\")";
+mostCurrent._activity.LoadLayout("SStars",mostCurrent.activityBA);
+ //BA.debugLineNum = 28;BA.debugLine="End Sub";
 return "";
 }
 public static String  _activity_pause(boolean _userclosed) throws Exception{
- //BA.debugLineNum = 32;BA.debugLine="Sub Activity_Pause (UserClosed As Boolean)";
- //BA.debugLineNum = 34;BA.debugLine="End Sub";
+ //BA.debugLineNum = 34;BA.debugLine="Sub Activity_Pause (UserClosed As Boolean)";
+ //BA.debugLineNum = 36;BA.debugLine="End Sub";
 return "";
 }
 public static String  _activity_resume() throws Exception{
- //BA.debugLineNum = 28;BA.debugLine="Sub Activity_Resume";
- //BA.debugLineNum = 30;BA.debugLine="End Sub";
+ //BA.debugLineNum = 30;BA.debugLine="Sub Activity_Resume";
+ //BA.debugLineNum = 32;BA.debugLine="End Sub";
+return "";
+}
+public static String  _btnsetwallpaper_click() throws Exception{
+anywheresoftware.b4a.objects.IntentWrapper _intent1 = null;
+ //BA.debugLineNum = 38;BA.debugLine="Sub btnSetWallpaper_Click";
+ //BA.debugLineNum = 39;BA.debugLine="Dim Intent1 As Intent";
+_intent1 = new anywheresoftware.b4a.objects.IntentWrapper();
+ //BA.debugLineNum = 40;BA.debugLine="Intent1.Initialize(\"android.service.wallpaper.LIVE_WALLPAPER_CHOOSER\",\"\")";
+_intent1.Initialize("android.service.wallpaper.LIVE_WALLPAPER_CHOOSER","");
+ //BA.debugLineNum = 41;BA.debugLine="StartActivity(Intent1)";
+anywheresoftware.b4a.keywords.Common.StartActivity(mostCurrent.activityBA,(Object)(_intent1.getObject()));
+ //BA.debugLineNum = 42;BA.debugLine="End Sub";
 return "";
 }
 
@@ -304,7 +316,9 @@ wallpaperservice._process_globals();
     }
 }public static String  _globals() throws Exception{
  //BA.debugLineNum = 17;BA.debugLine="Sub Globals";
- //BA.debugLineNum = 20;BA.debugLine="End Sub";
+ //BA.debugLineNum = 20;BA.debugLine="Private btnSetWallpaper As Button";
+mostCurrent._btnsetwallpaper = new anywheresoftware.b4a.objects.ButtonWrapper();
+ //BA.debugLineNum = 21;BA.debugLine="End Sub";
 return "";
 }
 public static String  _process_globals() throws Exception{

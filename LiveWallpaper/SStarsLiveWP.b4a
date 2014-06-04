@@ -1,23 +1,30 @@
-﻿Version=3.5
+﻿Version=3.8
 IconFile=
 NumberOfModules=1
 Module1=WallpaperService
-ModuleVisible1=1
-Package=flm.b4a.lgdxlivewallpaper
-DoNotOverwriteManifest=False
-ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~'End of default text.~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~AddApplicationText(~\n~<!-- ******** Add the internal service declaration - you can change android:label  ******* -->~\n~<service~\n~        android:label="SStars Live WP" ~\n~        android:name="anywheresoftware.b4a.libgdx.lgLiveWallpaper"~\n~        android:permission="android.permission.BIND_WALLPAPER">~\n~        <intent-filter>~\n~            <action android:name="android.service.wallpaper.WallpaperService" />~\n~        </intent-filter>~\n~        <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper" />~\n~</service>~\n~<!-- End of internal service declaration -->~\n~)
-UserTypesHint=typSmiley
-NumberOfFiles=0
-NumberOfLibraries=2
+Build1=Default,flm.b4a.lgdxlivewallpaper
+DoNotOverwriteManifest=True
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="7" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~'End of default text.~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~AddApplicationText(~\n~<!-- ******** Add the internal service declaration - you can change android:label  ******* -->~\n~<service~\n~        android:label="SStars Live WP" ~\n~        android:name="anywheresoftware.b4a.libgdx.lgLiveWallpaper"~\n~        android:permission="android.permission.BIND_WALLPAPER">~\n~		android:icon="@drawable/icon"~\n~        <intent-filter>~\n~            <action android:name="android.service.wallpaper.WallpaperService" />~\n~        </intent-filter>~\n~        <meta-data android:name="android.service.wallpaper" android:resource="@xml/wallpaper" />~\n~</service>~\n~<!-- End of internal service declaration -->~\n~)
+NumberOfFiles=6
+File1=HockeyBoardlandscape_Stars.png
+File2=HockeyBoardPortrait_Stars.png
+File3=Puck.png
+File4=skater.png
+File5=SStars.bal
+File6=Thumbs.db
+NumberOfLibraries=5
 Library1=core
 Library2=libgdx
+Library3=phone
+Library4=javaobject
+Library5=reflection
 @EndOfDesignText@
 #Region Module Attributes
 	#FullScreen: False
-	#IncludeTitle: True
+	#IncludeTitle: False
 	#ApplicationLabel: SStars LWP
 	#VersionCode: 1
-	#VersionName: 
+	#VersionName: First Release
 	#SupportedOrientations: unspecified
 	#CanInstallToExternalStorage: False
 #End Region
@@ -31,12 +38,14 @@ End Sub
 Sub Globals
 	'These global variables will be redeclared each time the activity is created.
 	'These variables can only be accessed from this module.
+	Private btnSetWallpaper As Button
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	'Exit message
-	ToastMessageShow("Please go to the home screen and add the Live Wallpaper.", True)
-	Activity.Finish
+	'ToastMessageShow("Please go to the home screen and add the Live Wallpaper.", True)
+	'Activity.Finish
+	Activity.LoadLayout("SStars")
 End Sub
 
 Sub Activity_Resume
@@ -45,4 +54,10 @@ End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
 
+End Sub
+
+Sub btnSetWallpaper_Click
+	Dim Intent1 As Intent
+	Intent1.Initialize("android.service.wallpaper.LIVE_WALLPAPER_CHOOSER","") 
+	StartActivity(Intent1)
 End Sub

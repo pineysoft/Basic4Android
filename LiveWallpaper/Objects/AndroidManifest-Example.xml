@@ -11,14 +11,14 @@
 	    android:normalScreens="true" 
 	    android:smallScreens="true" 
 	    android:anyDensity="true"/>
-	<application android:label="SStars LWP" android:icon="@drawable/icon">
+	<application android:label="SStars LWP">
 		
 		<!-- ******** Add the internal service declaration - you can change android:label  ******* -->
 		<service
 		        android:label="SStars Live WP" 
 		        android:name="anywheresoftware.b4a.libgdx.lgLiveWallpaper"
-		        android:permission="android.permission.BIND_WALLPAPER"
-				android:icon="@drawable/icon">
+		        android:permission="android.permission.BIND_WALLPAPER">
+				android:icon="@drawable/icon"
 		        <intent-filter>
 		            <action android:name="android.service.wallpaper.WallpaperService" />
 		        </intent-filter>

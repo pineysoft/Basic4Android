@@ -25,6 +25,13 @@ Sub Class_Globals
 	Dim DIFFICULTY_MEDIUM As String = "M"
 	Dim DIFFICULTY_HARD As String = "H"
 	
+	Dim GAMETYPE_MODE_LOC As String = "L"
+	Dim GAMETYPE_MODE_BT As String = "B"
+	Dim GAMETYPE_MODE_WIFI As String = "W"
+	
+	Dim GAME_MASTER As Int = 0
+	Dim GAME_SLAVE As Int = 1
+	
 	Dim BG_COLOUR As Int = Colors.RGB(30,144,255)
 	Dim CURRENT_SIDE_COLOUR As Int = Colors.Red
 End Sub

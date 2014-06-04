@@ -1,0 +1,20 @@
+This file maps the renamed variables to the original ones.
+v5=lw
+v6=gl
+v7=batch
+v0=camera
+vv1=texskater
+vv2=texpuck
+vv3=texbgp
+vv4=texbgl
+vv5=texbg
+vv6=lstsmileys
+vv7=sstar
+vv0=spuck
+vvv1=playtimer
+vvv2=allowplay
+vvv3=shootingpoint
+vvv4=wallpaperservice
+vvv5=createtextures
+vvv6=getshootingposition
+vvv7=main
