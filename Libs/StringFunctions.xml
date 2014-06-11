@@ -1,0 +1,697 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <doclet-version-NOT-library-version>1.00</doclet-version-NOT-library-version>
+  <class>
+    <name>adr.stringfunctions.stringfunctions</name>
+    <shortname>StringFunctions</shortname>
+    <owner>process</owner>
+    <permission>android.permission.WRITE_EXTERNAL_STORAGE</permission>
+    <method>
+      <name>IsInitialized</name>
+      <comment>Tests whether the object has been initialized.</comment>
+      <returntype>boolean</returntype>
+    </method>
+    <method>
+      <name DesignerName="AddSpaces">_v5</name>
+      <comment>Returns a string of spaces.  The number returned is set by HowMany.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>HowMany</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="AsciiCodes">_v6</name>
+      <comment>Displays a MessageBox with all Characters and their ASCII codes.</comment>
+      <returntype>String</returntype>
+    </method>
+    <method>
+      <name DesignerName="At">_v7</name>
+      <comment>Returns the position of the SearchFor within YourString.</comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>YourString</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>SearchFor</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="CurrentWeek">_v0</name>
+      <comment>Returns the number of the current week, 1-52 from the date passed to MyDate. </comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="DayOfMonth">_vv1</name>
+      <comment>Returns the day of the month like 1-31, from the date passed to MyDate. </comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Decrypt">_vv3</name>
+      <comment>Converts an encrypted string of text to readable format, no key is needed. </comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>YourText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Empty">_vv5</name>
+      <comment>Test to see if the string is empty and returns True if it is, otherwise returns False.</comment>
+      <returntype>boolean</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Encrypt">_vv6</name>
+      <comment>Converts a string of text to simple encryption, no Key is needed.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>YourText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="EraseData">_vv7</name>
+      <comment>This will erase all data saved with the SaveData function stored in the
+temporary vault.</comment>
+      <returntype>String</returntype>
+    </method>
+    <method>
+      <name DesignerName="FileExist">_vv0</name>
+      <comment>Returns True if the filename passed does exist, otherwise returns False.
+Be sure to include the path like:
+
+If FileExist("/mnt/sdcard/mydata.dat") Then MsgBox("Yes", "The Answer")</comment>
+      <returntype>boolean</returntype>
+      <parameter>
+        <name>PathAndFileName</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="GetData">_vvv1</name>
+      <comment>Gets data from the temporary vault.
+
+EditText1.Text = SF.GetData("EnteredName")
+
+The Key is case sensitive.</comment>
+      <returntype>Object</returntype>
+      <parameter>
+        <name>Key</name>
+        <type>Object</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="getSDCardPath" HideFromIDE="true">_getvvvvvvvv3</name>
+      <comment>Returns external/physical SD Card directory. This function may not return the correct store 
+on an Android OS above 4.1. This is due to changes made to the OS system in the newer versions.
+Returns "", if the store can not be read.</comment>
+      <returntype>String</returntype>
+    </method>
+    <method>
+      <name DesignerName="iif">_vvv3</name>
+      <comment>This is a single line if conditional test.  If Value1 is true, Value2 is returned, otherwise
+Value3 will be returned. Works with strings and booleans.
+Example:
+
+MsgBox(iif("Bob"="Jim", "They are the same", "They are not the same"), "The Answer")
+or
+MyBoolean = iif(FirstTime = True, StartMyService = True, StartMyService = False)</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>Value1</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Value2</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Value3</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Initialize">_initialize</name>
+      <comment>Initializes the object for use.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>ba</name>
+        <type>anywheresoftware.b4a.BA</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="InString">_vvv4</name>
+      <comment>Returns the position of the SearchFor within YourString.</comment>
+      <returntype>long</returntype>
+      <parameter>
+        <name>YourString</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>SearchFor</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="IsEmpty">_vvv5</name>
+      <comment>Test to see if the string is empty and returns True if it is, otherwise returns False.</comment>
+      <returntype>boolean</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Left">_vvv6</name>
+      <comment>Returns the Left portion of a string with the number of characters passed
+in Length.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Length</name>
+        <type>long</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Len">_vvv7</name>
+      <comment>Returns the length of the string.</comment>
+      <returntype>long</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="ListToString">_vvv0</name>
+      <comment>Converts a List object to a String.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>YourList</name>
+        <type>anywheresoftware.b4a.objects.collections.List</type>
+      </parameter>
+      <parameter>
+        <name>Sorted</name>
+        <type>boolean</type>
+      </parameter>
+      <parameter>
+        <name>Ascending</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="ListToStringArray">_vvvv1</name>
+      <comment>Converts a List object to a String Array.</comment>
+      <returntype>String[]</returntype>
+      <parameter>
+        <name>YourList</name>
+        <type>anywheresoftware.b4a.objects.collections.List</type>
+      </parameter>
+      <parameter>
+        <name>Sorted</name>
+        <type>boolean</type>
+      </parameter>
+      <parameter>
+        <name>Ascending</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Lower">_vvvv2</name>
+      <comment>Returns the string converted to Lowercase characters.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Ltrim">_vvvv3</name>
+      <comment>Returns a new string with the leading spaces removed.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="MB">_vvvv4</name>
+      <comment>Same as MsgBox but only needs one parameter.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>Message</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Mid">_vvvv5</name>
+      <comment>Returns the a new String for how ever many characters passed in Length from
+a starting position passed in Start.
+Example:
+
+Mid("This is a long line of text", 5, 2)
+In this example the function will Return: "is"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Start</name>
+        <type>int</type>
+      </parameter>
+      <parameter>
+        <name>Length</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="MidExtract">_vvvv6</name>
+      <comment>Used to extract text from a string between to other blocks of text.
+
+Ans = MidExtract("Dr. Jim Joe Brown", "Jim", "Brown")	'Returns: Joe
+
+Ans = MidExtract("Dr. Jim [Joe] Brown", "[", "]")	'Returns: Joe</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Start</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>EndAt</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="MidS">_vvvv7</name>
+      <comment>Works like the Mid$ function in Visual Basic.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>StartAt</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Month">_vvvv0</name>
+      <comment>Returns the number of the current month 1-12 as Int type, from the date passed to MyDate. </comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="MonthName">_vvvvv1</name>
+      <comment>Returns the Name the current month as a String like January, etc., from the date passed to MyDate. </comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="NewDate">_vvvvv2</name>
+      <comment>Returns a new date adding or subtracting HowManyDays. HowManyDays can be positive or
+negative numbers. </comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>DatePassed</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>HowManyDays</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="NumOfDaysBetween">_vvvvv3</name>
+      <comment>Returns the numbers of days passed between the two dates passed.</comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>CurrentDate</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>OtherDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Pad">_vvvvv4</name>
+      <comment>Used to pad a string with a selected character. If Post = True the padding will follow
+any text in the string, if Post = False, the padding will be before the text. Length is
+the total length for the padded string. PadWith is the selected character to use for the
+padding.
+
+SF.Pad("Jimmy Joe", "*", 20, True)	'Returns "Jimmy Joe***********"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>Text</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>PadWith</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Length</name>
+        <type>int</type>
+      </parameter>
+      <parameter>
+        <name>Post</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Proper">_vvvvv5</name>
+      <comment>Returns the string in proper format.
+Example:
+
+MyText = "jim joe brown"
+MyText = SF.Proper(Mytext)
+This function will return: "Jim Joe Brown"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Replicate">_vvvvv6</name>
+      <comment>Repeats any character passed, a selected number of Times.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>mChar</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Times</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Right">_vvvvv7</name>
+      <comment>Returns the Right portion of a string with the number of characters passed
+in Length.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Length</name>
+        <type>long</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="RndChrGen">_vvvvv0</name>
+      <comment>Returns a string of ramdom characters with a length specified by StringLength.  CharacterType tells
+the function what type of characters to return.
+CharacterType = 0 for Upper and Lower case 
+CharacterType = 1 for Upper case only
+CharacterType = 2 for Lower case only</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringLength</name>
+        <type>int</type>
+      </parameter>
+      <parameter>
+        <name>CharacterType</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Rtrim">_vvvvvv1</name>
+      <comment>Returns a new string with the trailing spaces removed.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="SaveData">_vvvvvv2</name>
+      <comment>Save data passed in a temporary file.
+
+SF.SaveData("ScreenTitle", MyVar)
+or
+SF.SaveData("EnteredName", EditText1.Text)</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>Key</name>
+        <type>Object</type>
+      </parameter>
+      <parameter>
+        <name>Data</name>
+        <type>Object</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="ScrInfo">_vvvvvv3</name>
+      <comment>Returns information about the devices screen. You can pass these parameters:
+ Pass "W" for Width 
+ Pass "H" for Height
+ Pass "S" for Scale
+ Pass "D" for DPI
+
+ Call like: SF.ScrInfo("W")</comment>
+      <returntype>int</returntype>
+      <parameter>
+        <name>Aspect</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="SearchDate">_vvvvvv4</name>
+      <comment>Returns True if the Date1 and the Date2 are within x Days(DateRange) of each other.
+Pass the dates as Strings.
+Example:
+
+SearchDate("03/01/2013", "02/15/2013", 30)</comment>
+      <returntype>boolean</returntype>
+      <parameter>
+        <name>Date1</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Date2</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>DateRange</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Split">_vvvvvv5</name>
+      <comment>Returns a LIST of items from the string split at the Delimiter.
+EXAMPLE:
+
+Dim ANS As List
+ANS = SF.Split("This is a test string.", " ")</comment>
+      <returntype>anywheresoftware.b4a.objects.collections.List</returntype>
+      <parameter>
+        <name>CurrentString</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Split_At_Delimiter</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="SplitGetWord">_vvvvvv6</name>
+      <comment>Returns just the one element selected with GetElement from the string. 
+EXAMPLE:
+
+ANS = SF.SplitGetWord("This is a test string.", " ", 2)
+In this example the function will Return: "is"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>CurrentString</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Split_At_Delimiter</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>GetElement</name>
+        <type>int</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="StrArraySort">_vvvvvv7</name>
+      <comment>Used to sort a String Array. Sort will be in Ascending order if Ascending = True.</comment>
+      <returntype>String[]</returntype>
+      <parameter>
+        <name>StringArray</name>
+        <type>String[]</type>
+      </parameter>
+      <parameter>
+        <name>Ascending</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="StringArrayToList">_vvvvvv0</name>
+      <comment>Converts a String Array to a List object.</comment>
+      <returntype>anywheresoftware.b4a.objects.collections.List</returntype>
+      <parameter>
+        <name>StringArray</name>
+        <type>String[]</type>
+      </parameter>
+      <parameter>
+        <name>Sorted</name>
+        <type>boolean</type>
+      </parameter>
+      <parameter>
+        <name>Ascending</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="StringToList">_vvvvvvv1</name>
+      <comment>Convert a String to a List object. This will split the string between words.</comment>
+      <returntype>anywheresoftware.b4a.objects.collections.List</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>Sorted</name>
+        <type>boolean</type>
+      </parameter>
+      <parameter>
+        <name>Ascending</name>
+        <type>boolean</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Stuff">_vvvvvvv2</name>
+      <comment>Used to replace text in a string with new text.
+Example:
+
+MyText = "I will tell you that joe is a good friend!"
+MyText = SF.Stuff(MyText, "Joe Brown", "joe")
+This function will return: "I will tell you that Joe Brown is a good friend!"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>CurrentText</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>InsertInString</name>
+        <type>String</type>
+      </parameter>
+      <parameter>
+        <name>RemoveFromString</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Today">_vvvvvvv3</name>
+      <comment>Returns the devices date.</comment>
+      <returntype>String</returntype>
+    </method>
+    <method>
+      <name DesignerName="Trim">_vvvvvvv4</name>
+      <comment>Returns a new string with leading and trailing spaces removed.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>Text</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Upper">_vvvvvvv5</name>
+      <comment>Returns the string converted to Uppercase characters.</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Val">_vvvvvvv6</name>
+      <comment>Returns the numerical value of a string. If the string contains now value it returns 0.</comment>
+      <returntype>double</returntype>
+      <parameter>
+        <name>StringText</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="ValidDate">_vvvvvvv7</name>
+      <comment>Returns True if the date passed is a Valid date.</comment>
+      <returntype>boolean</returntype>
+      <parameter>
+        <name>ChkDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="WeekDay">_vvvvvvv0</name>
+      <comment>Returns the number of the day of the week 1-7 as a String, from the date passed to MyDate. </comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="WeekName">_vvvvvvvv1</name>
+      <comment>Returns the name of the day of the week like Sunday, Monday, etc., from the date passed to MyDate. </comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <method>
+      <name DesignerName="Year">_vvvvvvvv2</name>
+      <comment>Returns the year of the date passed in MyDate.
+Example:
+
+SF.Year("01/01/2013") returns "2013"</comment>
+      <returntype>String</returntype>
+      <parameter>
+        <name>MyDate</name>
+        <type>String</type>
+      </parameter>
+    </method>
+    <property>
+      <name DesignerName="SDCardPath">_vvvvvvvv3</name>
+      <comment>Returns external/physical SD Card directory. This function may not return the correct store 
+on an Android OS above 4.1. This is due to changes made to the OS system in the newer versions.
+Returns "", if the store can not be read.</comment>
+      <returntype>String</returntype>
+    </property>
+  </class>
+  <version>1.05</version>
+  <author>Margret</author>
+</root>

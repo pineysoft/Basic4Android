@@ -29,6 +29,17 @@ Sub Class_Globals
 	Dim GAMETYPE_MODE_BT As String = "B"
 	Dim GAMETYPE_MODE_WIFI As String = "W"
 	
+	Dim GAME_MSG_SET_GAME_TYPE As String = "M"
+	Dim GAME_MSG_SET_SETTINGS As String = "S"
+	Dim GAME_MSG_PROCESS_TURN As String = "T"
+	Dim GAME_MSG_START_GAME As String = "G"
+	Dim GAME_MSG_SET_PLAYERS As String = "P"
+	Dim GAME_MSG_CLOSE_GAME As String = "X"
+	Dim GAME_MSG_PROCESS_CHAT As String = "C"
+	Dim GAME_MSG_SET_COLUMNS As String = "GC"
+	Dim GAME_MSG_SET_ROWS As String = "GR"
+	Dim GAME_MSG_CLOSE_START As String = "X2"
+	
 	Dim GAME_MASTER As Int = 0
 	Dim GAME_SLAVE As Int = 1
 	

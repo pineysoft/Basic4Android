@@ -14,6 +14,10 @@
 	<uses-permission android:name="android.permission.BLUETOOTH"/>
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 	<uses-permission android:name="android.permission.VIBRATE"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<application
 		android:icon="@drawable/icon"
 		android:label="Square Paddocks">
@@ -36,5 +40,9 @@
 			android:label="Square Paddocks"
 			android:screenOrientation="portrait">
 		</activity>
+		<service android:name=".netconn">
+		</service>
+		<receiver android:name=".netconn$netconn_BR">
+		</receiver>
 	</application>
 </manifest>

@@ -1,12 +1,13 @@
 ﻿Version=3.8
 IconFile=
-NumberOfModules=6
+NumberOfModules=7
 Module1=GameActivity
 Module2=Point
 Module3=Player
 Module4=Constants
 Module5=GameSquare
 Module6=Turn
+Module7=NetConn
 Build1=Default,pineysoft.squarepaddocks
 Build2=Debug,pineysoft.squarepaddocks,WithDebug
 DoNotOverwriteManifest=False
@@ -38,13 +39,19 @@ File23=playgamebutton.png
 File24=StartScreen.bal
 File25=wifi.png
 File26=winnerScreen.bal
-NumberOfLibraries=6
+NumberOfLibraries=12
 Library1=animationplus
 Library2=audio
 Library3=core
 Library4=phone
 Library5=reflection
 Library6=serial
+Library7=randomaccessfile
+Library8=stringfunctions
+Library9=network
+Library10=ime
+Library11=dateutils
+Library12=sql
 @EndOfDesignText@
 #Region  Project Attributes 
 	#ApplicationLabel: Square Paddocks
@@ -61,164 +68,258 @@ Library6=serial
 #End Region
 
 Sub Process_Globals
-	'These global variables will be declared once when the application starts.
-	'These variables can be accessed from all modules.
-	Dim admin As BluetoothAdmin
-	Dim serial1 As Serial
-	Dim foundDevices As List
-	Type NameAndMac (Name As String, Mac As String)
-	Dim connectedDevice As NameAndMac
-	Dim IsMaster As Boolean
+	Private CC As ContentChooser
+	Private admin As BluetoothAdmin
+	Private btDevices As List
+	Type NameAndMac (name As String, mac As String)
+	Private searchInProgress As Boolean
+	Private ip As String
+	Public IsMaster As Boolean
+	Public gameStart As Boolean
+	Public SpConstants As Constants
 End Sub
 
 Sub Globals
-	'These global variables will be redeclared each time the activity is created.
-	'These variables can only be accessed from this module.
-	Dim btnGTContinue As Button
-	Private rdbBlueTooth As RadioButton
-	Private rdbLocalPlay As RadioButton
-	Private rdbWifi As RadioButton
-	Private btnDiscoverMe As Button
-	Private btnSearch As Button
+	Dim btnConnectWifi As Button
+	Dim lblIP As Label
+	Dim ProgressBar1 As ProgressBar
+	Dim spnrPairedDevices As Spinner
+	Dim edtIP As EditText
+	Dim btnConnectBT As Button
+	Dim lblWifiStatus As Label
+	Dim lblBTStatus As Label
+	Dim IME As IME
+	Dim lblProgress As Label
+	Dim lblFile As Label
+	Dim btnMakeDiscoverable As Button
+	Dim btnBTSearch As Button
+	Private txtMessage As EditText
+	Private btnStartGame As Button
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
-	'Do not forget to load the layout file created with the visual designer. For example:
 	If FirstTime Then
-		admin.Initialize("admin")
-		serial1.Initialize("serial1")
-	End If	
-	Activity.LoadLayout("GameTypeScreen")
-	If FirstTime Then
-		rdbLocalPlay.Checked = True
-		UpdateRadioButtonSettings		
+		StartService(NetConn)
+		SpConstants.Initialize
+		btDevices.Initialize
+		admin.Initialize("Admin")
+		CC.Initialize("CC")
+		
+		'add the already paired devices to the list
+		'later the user can search for new devices
+		Dim serial1 As Serial
+		serial1.Initialize("")
+		Dim pairedDevices As Map = serial1.GetPairedDevices
+		For i = 0 To pairedDevices.Size - 1
+			Dim nm As NameAndMac
+			nm.Initialize
+			nm.mac = pairedDevices.GetValueAt(i)
+			nm.name = pairedDevices.GetKeyAt(i)
+			btDevices.Add(nm)
+		Next
 	End If
-
+	IME.Initialize("")
+	Activity.LoadLayout("GameTypeScreen")
+	Activity.AddMenuItem("Disconnect", "mnuDisconnect")
+	'filter for ip address (allow multiple dots)
+	IME.SetCustomFilter(edtIP, edtIP.INPUT_TYPE_DECIMAL_NUMBERS, "0123456789.")
 End Sub
 
 Sub Activity_Resume
-	btnSearch.Enabled = False
-	btnDiscoverMe.Enabled = False
-End Sub
-
-Sub Activity_Pause (UserClosed As Boolean)
-	If UserClosed = True Then
-		serial1.Disconnect
-	End If
-End Sub
-
-Sub Admin_StateChanged (NewState As Int, OldState As Int)
-	btnSearch.Enabled = (NewState = admin.STATE_ON)
-	btnDiscoverMe.Enabled = btnSearch.Enabled
-End Sub
-
-Sub UpdateRadioButtonSettings
-	Dim spConst As Constants
-	spConst.Initialize
-	
-	If rdbLocalPlay.checked Then
-		btnDiscoverMe.Enabled = False
-		btnSearch.Enabled = False
-		btnGTContinue.Enabled = True
-		GameActivity.GameMode = spConst.GAMETYPE_MODE_LOC
-	Else If rdbBlueTooth.Checked Then
-		btnDiscoverMe.Enabled = True
-		btnSearch.Enabled = True
-		btnGTContinue.Enabled = False
-		GameActivity.GameMode = spConst.GAMETYPE_MODE_BT
-	End If
-End Sub
-Sub btnGTContinue_Click
-	StartActivity(GameActivity)
-End Sub
-Sub rdbBlueTooth_CheckedChange(Checked As Boolean)
+	edtIP.Text = ip
+	spnrPairedDevices.Clear
+	For Each nm As NameAndMac In btDevices
+		spnrPairedDevices.Add(nm.name)
+	Next
+	'try to turn on Bluetooth if it is disabled
 	If admin.IsEnabled = False Then
 		If admin.Enable = False Then 
 			ToastMessageShow("Error enabling Bluetooth adapter.", True)
-			rdbLocalPlay.Checked = True
 		Else
 			ToastMessageShow("Enabling Bluetooth adapter...", False)
 			'the StateChanged event will be soon raised
 		End If
-	Else
-		Admin_StateChanged(admin.STATE_ON, 0)
+	End If
+	UpdateUI
+	UpdateProgress
+End Sub
+
+Sub mnuDisconnect_Click
+	CallSub(NetConn, "Disconnect")
+End Sub
+
+
+
+Sub Activity_Pause (UserClosed As Boolean)
+	'save the ip address
+	ip = edtIP.Text
+End Sub
+
+Sub Admin_StateChanged (NewState As Int, OldState As Int)
+	UpdateUI
+End Sub
+
+Public Sub UpdateUI
+	'this sub is responsible for updating the UI based on the state which is stored in the service
+	Dim wifi = True, bt = True, startGame = True, discover = True As Boolean
+	If admin.IsEnabled = False Then
+		bt = False
+		discover = False
+	End If
+	lblIP.Text = NetConn.MyIP
+	lblWifiStatus.Text = NetConn.WifiStatus
+	lblBTStatus.Text = NetConn.BTStatus
+	If NetConn.WifiConnected Then lblWifiStatus.TextColor = Colors.Green Else lblWifiStatus.TextColor = Colors.Red
+	If NetConn.BTConnected Then lblBTStatus.TextColor = Colors.Green Else lblBTStatus.TextColor = Colors.Red
+	If spnrPairedDevices.Size = 0 Then bt = False
+	If NetConn.BTConnected OR NetConn.WifiConnected Then
+		wifi = False
+		bt = False
+		discover = False
+	Else 'no connection
+		gameStart = False
 	End If
 	
-	UpdateRadioButtonSettings
+	If wifi AND Regex.IsMatch("[^.]+\.[^.]+\.[^.]+\.[^.]+", edtIP.Text) = False Then 
+		wifi = False
+	End If
+	If NetConn.MyIP.Length = 0 OR NetConn.MyIP = "127.0.0.1" Then
+		wifi = False
+	End If
+	If NetConn.SendingFile OR NetConn.ReceivingFile Then gameStart = False
+	If searchInProgress Then bt = False
+	btnConnectBT.Enabled = bt
+	btnConnectWifi.Enabled = wifi
+	btnBTSearch.Enabled = discover
+	btnMakeDiscoverable.Enabled = discover
 End Sub
-Sub btnDiscoverMe_Click
-		'this intent makes the device discoverable for 300 seconds.
-	Dim i As Intent
-	i.Initialize("android.bluetooth.adapter.action.REQUEST_DISCOVERABLE", "")
-	i.PutExtra("android.bluetooth.adapter.extra.DISCOVERABLE_DURATION", 300)
-	StartActivity(i)
-	
-	serial1.Listen
+
+
+Public Sub UpdateProgress
+	lblProgress.Text = NetConn.progressText
+	ProgressBar1.Progress = NetConn.progressValue
+	lblFile.Text = NetConn.lblFile
 End Sub
-Sub btnSearch_Click
-		foundDevices.Initialize
+
+Sub btnConnectWifi_Click
+	CallSubDelayed2(NetConn, "ConnectWifi", edtIP.Text)
+End Sub
+
+Sub btnConnectBT_Click
+	If spnrPairedDevices.SelectedIndex = -1 Then Return
+	Dim nm As NameAndMac = btDevices.Get(spnrPairedDevices.SelectedIndex)
+	CallSubDelayed2(NetConn, "ConnectBT", nm.mac)
+End Sub
+
+'starts a search process
+Sub btnBTSearch_Click
+	spnrPairedDevices.Clear
+	btDevices.Clear
 	If admin.StartDiscovery	= False Then 
 		ToastMessageShow("Error starting discovery process.", True)
 	Else
-		ProgressDialogShow("Searching for devices...")
+		searchInProgress = True
+		SetBTStatus("Searching for BT devices...")
+		UpdateUI
 	End If
 End Sub
 
+Sub SetBTStatus(status As String)
+	NetConn.BTstatus = status
+	lblBTStatus.Text = status
+End Sub
+
 Sub Admin_DiscoveryFinished
-	ProgressDialogHide
-	If foundDevices.Size = 0 Then
-		ToastMessageShow("No device found.", True)
+	searchInProgress = False
+	If spnrPairedDevices.Size = 0 Then
+		SetBTStatus("No BT devices found.")
 	Else
-		Dim l As List
-		l.Initialize
-		For i = 0 To foundDevices.Size - 1
-			Dim nm As NameAndMac
-			nm = foundDevices.Get(i)
-			l.Add(nm.Name)
-		Next
-		Dim res As Int
-		res = InputList(l, "Choose device to connect", -1)
-		If res <> DialogResponse.CANCEL Then
-			connectedDevice = foundDevices.Get(res)
-			ProgressDialogShow("Trying to connect to: " & connectedDevice.Name & " (" & connectedDevice.Mac & ")")
-			GameActivity.IsMaster = True
-			serial1.Connect(connectedDevice.Mac)
-		End If
+		SetBTStatus(spnrPairedDevices.Size & " device(s) found.")
 	End If
+	UpdateUI
 End Sub
 
 Sub Admin_DeviceFound (Name As String, MacAddress As String)
 	Log(Name & ":" & MacAddress)
+	spnrPairedDevices.Add(Name)
 	Dim nm As NameAndMac
+	nm.Initialize
 	nm.Name = Name
-	nm.Mac = MacAddress
-	foundDevices.Add(nm)
-	ProgressDialogShow("Searching for devices (~ device found)...".Replace("~", foundDevices.Size))
+	nm.mac = MacAddress
+	btDevices.Add(nm)
+	SetBTStatus("Searching for devices (" & btDevices.Size & " found)")
 End Sub
 
+Sub btnMakeDiscoverable_Click
+	'this intent makes the device discoverable for 300 seconds.
+	Dim i As Intent
+	i.Initialize("android.bluetooth.adapter.action.REQUEST_DISCOVERABLE", "")
+	i.PutExtra("android.bluetooth.adapter.extra.DISCOVERABLE_DURATION", 300)
+	StartActivity(i)
+End Sub
 
-Sub Serial1_Connected (Success As Boolean)
-	
-	ProgressDialogHide
-	Log("connected: " & Success)
-	If Success = False Then
-		Log(LastException.Message)
-		ToastMessageShow("Error connecting: " & LastException.Message, True)
-	Else
-		Dim spConst As Constants
-		spConst.Initialize
-		
-		If rdbBlueTooth.Checked Then		
-			GameActivity.GameMode = spConst.GAMETYPE_MODE_BT
-		Else If rdbWifi.Checked Then
-			GameActivity.GameMode = spConst.GAMETYPE_MODE_WIFI
-		Else
-			GameActivity.GameMode = spConst.GAMETYPE_MODE_LOC
+Sub edtIP_TextChanged (Old As String, New As String)
+	UpdateUI 'the btnConnectWifi.Enabled depends on the text
+End Sub
+
+Sub btnChooseFile_Click
+	CC.Show("*/*", "Choose file to send")
+End Sub
+
+Sub CC_Result (Success As Boolean, Dir As String, FileName As String)
+	If Success Then
+		Dim normalizedFile As String = GetPathFromContentResult(FileName)
+		If File.Exists("", normalizedFile) == False Then
+			ToastMessageShow("File is not accessible.", True)
+			Return
 		End If
-	
-		StartActivity(GameActivity)
+		CallSubDelayed3(NetConn, "SendFile", "", normalizedFile)
+	Else
+		If LastException.IsInitialized Then ToastMessageShow(LastException.Message, True)
 	End If
 End Sub
-Sub rdbLocalPlay_CheckedChange(Checked As Boolean)
-	UpdateRadioButtonSettings	
+
+'this code tries to retrieve the real file from the uri
+Sub GetPathFromContentResult(UriString As String) As String
+    If UriString.StartsWith("/") Then Return UriString 'If the user used a file manager to choose the image
+    Dim Proj() As String
+    Proj = Array As String("_data")
+    Dim Cursor As Cursor
+    Dim r As Reflector
+    Dim Uri As Object
+    Uri = r.RunStaticMethod("android.net.Uri", "parse", _
+        Array As Object(UriString), _
+        Array As String("java.lang.String"))
+    r.Target = r.GetContext
+    r.Target = r.RunMethod("getContentResolver")
+    Cursor = r.RunMethod4("query", _
+    Array As Object(Uri, Proj, Null, Null, Null), _
+    Array As String("android.net.Uri", _
+        "[Ljava.lang.String;", "java.lang.String", _
+        "[Ljava.lang.String;", "java.lang.String"))
+    
+    Cursor.Position = 0
+    Dim res As String
+    res = Cursor.GetString("_data")
+    Cursor.Close
+    Return res
+End Sub
+
+Sub txtMessage_EnterPressed
+	CallSubDelayed2("NetConn","SendMessage","C," & txtMessage.Text)
+End Sub
+Sub btnStartGame_Click
+	If NetConn.BTConnected Then
+		GameActivity.GameMode = SpConstants.GAMETYPE_MODE_BT
+	Else If NetConn.WifiConnected Then
+		GameActivity.GameMode = SpConstants.GAMETYPE_MODE_WIFI
+	End If
+	
+	If GameActivity.GameMode <> SpConstants.GAMETYPE_MODE_LOC Then
+		CallSubDelayed2("NetConn","SendMessage","M," & GameActivity.GameMode)
+	End If
+	
+	GameActivity.IsMaster = True
+	StartActivity(GameActivity)
+	
 End Sub

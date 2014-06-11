@@ -8,6 +8,7 @@ Sub Class_Globals
 	Dim Score As Int
 	Dim Colour As Int
 	Dim PlayerImage As Bitmap
+	Dim PlayerImageNum As Int
 	Dim PlayerType As Int ' 0 for human - 1 for droid
 End Sub
 

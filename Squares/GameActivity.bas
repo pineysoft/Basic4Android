@@ -24,6 +24,7 @@ Sub Process_Globals
 	Dim soundsOn As Boolean = True
 	Dim GameMode As String
 	Dim IsMaster As Boolean = False
+	Dim myTurn As Boolean
 End Sub
 
 Sub Globals
@@ -38,7 +39,6 @@ Sub Globals
 	Private panel1 As Panel
 	Private canv As Canvas
 	Private players As List
-	Private playerImages As List
 	Private checkBoxImages As List
 	Private lblPlayer1 As Label
 	Private lblPlayer1Image As Label
@@ -97,6 +97,9 @@ Sub Globals
 	Dim start5 As Int
 	Dim start6 As Int	
 	Private chkSounds As ImageView
+	Private lblGameModeDescr As Label
+	Private txtMessage As EditText
+	Private btnStartGame As Button
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
@@ -104,6 +107,9 @@ Sub Activity_Create(FirstTime As Boolean)
 	SPConstants.Initialize
 	If FirstTime Then
 		Activity.LoadLayout("StartScreen")
+		If NetConn.BTStatus = "Connected" Then
+			GameMode = SPConstants.GAMETYPE_MODE_LOC
+		End If		
 		DisplayFrontScreen
 		AnimateCharacters	
 		CreateColours
@@ -112,15 +118,206 @@ Sub Activity_Create(FirstTime As Boolean)
 		UpdateLabels
 		RestoreDefaults	
 		InitialiseSounds
+		UpdateGameModeSettings
 	Else
 		Activity.LoadLayout("StartScreen")
+		AnimateCharacters		
 		CreateColours
 		LoadImages
 		LoadSpinners
-		RestoreDefaults	
-	
+		RestoreDefaults
+		UpdateGameModeSettings
 	End If
+End Sub
 
+Sub SendMessage(msg As String)
+	CallSubDelayed2(NetConn,"SendMessage",msg)
+End Sub
+Sub ShowChatWindow(msg As Boolean)
+
+	txtMessage.Visible = msg
+	lblPlayer3.Visible = (msg = False)
+	lblPlayer3Image.Visible = (msg = False)
+	lblPlayer4.Visible = (msg = False)
+	lblPlayer4Image.Visible = (msg = False)		
+	
+End Sub
+
+Sub UpdateGameModeSettings
+	lblGameModeDescr.Text = "Local"
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
+		If IsMaster Then 
+			myTurn = True
+			Dim settings As String = GetSettings					
+			SendMessage(settings)				
+		Else
+			myTurn = False
+		End If
+		If GameMode = SPConstants.GAMETYPE_MODE_BT Then
+			lblGameModeDescr.Text = "Bluetooth"
+		Else
+			lblGameModeDescr.Text = "Wifi"
+		End If
+	Else
+		myTurn = True
+	End If
+End Sub
+Sub GetSettings() As String
+	Dim settings As String
+	
+	settings = SPConstants.GAME_MSG_SET_SETTINGS & "," & sbRows.Value & "," & sbColumns.Value & "," & spnDifficulty.SelectedItem
+	
+	Return settings
+End Sub
+
+Sub SetSettings(settings As String) 
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(settings,",")
+	
+	sbRows.Value = lstSettings.Get(1)
+	sbColumns.Value = lstSettings.Get(2)
+	
+	For iLoop = 0 To spnDifficulty.Size - 1
+		If spnDifficulty.GetItem(iLoop) = lstSettings.Get(3) Then
+			spnDifficulty.SelectedIndex = iLoop
+			Exit
+		End If
+	Next	
+End Sub
+
+Sub AStream_NewData (Buffer() As Byte)
+	ProcessStreamMessage(BytesToString(Buffer, 0, Buffer.Length, "UTF8"))
+End Sub
+
+Sub AStream_Error
+	ToastMessageShow("Connection is broken.", True)
+	Activity.Finish		
+End Sub
+
+Sub AStream_Terminated
+	AStream_Error
+End Sub
+
+Sub UpdateGameMessages(msg As String)
+	ProcessStreamMessage(msg)
+End Sub
+Sub ProcessStreamMessage(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	Dim selection As String = lstSettings.Get(0)
+	
+	ToastMessageShow(msg,False)
+	Select selection
+		' "G"
+		Case SPConstants.GAME_MSG_SET_GAME_TYPE
+			ProcessGameMode(msg)
+		' "S"
+		Case SPConstants.GAME_MSG_SET_SETTINGS
+			SetSettings(msg)
+		' "T"
+		Case SPConstants.GAME_MSG_PROCESS_TURN
+			ProcessStreamTurn(msg)
+		' "G"
+		Case SPConstants.GAME_MSG_START_GAME
+			ReverseAnimate			
+		' "P"
+		Case SPConstants.GAME_MSG_SET_PLAYERS
+			ProcessStreamPlayers(msg)			
+		' "X"
+		Case SPConstants.GAME_MSG_CLOSE_GAME
+			ToastMessageShow("The Other Player closed the Game", False)
+			CloseGame	
+		' "C"
+		Case SPConstants.GAME_MSG_PROCESS_CHAT
+			ProcessChat(msg)
+		' "GC"
+		Case SPConstants.GAME_MSG_SET_COLUMNS
+			ProcessColumnChange(msg)
+		' "GR"
+		Case SPConstants.GAME_MSG_SET_ROWS
+			ProcessRowChange(msg)
+		' "X2"
+		Case SPConstants.GAME_MSG_CLOSE_START
+			CloseStartScreen
+	End Select
+End Sub
+
+Sub ProcessGameMode(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	GameMode = lstSettings.Get(1)
+	UpdateGameModeSettings
+End Sub
+Sub ProcessStreamTurn(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	Dim currentSquare As GameSquare = gameSquares(lstSettings.Get(2), lstSettings.Get(3))
+	
+	CalculateMove2(currentSquare, lstSettings.Get(4))
+	
+	Dim value As Int = lstSettings.Get(1)
+	If value = 0 Then
+		myTurn = True
+	Else
+		myTurn = False
+	End If
+End Sub
+
+Sub ProcessStreamPlayers(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	
+	If GameMode = SPConstants.GAMETYPE_MODE_BT AND players.IsInitialized = False Then
+		CreatePlayers
+	End If
+	
+	Dim iLoop As Int
+	For iLoop = 0 To 1
+		Dim bm As Bitmap
+		Dim ply As Player = players.Get(iLoop)
+		bm.Initialize(File.DirAssets, "monsterImage" & (lstSettings.get(iLoop + 1)) & ".png")		
+		ply.PlayerImage = bm
+		ply.PlayerImageNum = lstSettings.get(iLoop + 1)
+		Dim vImage As View = GetViewByTag1(pnlBase, "I" & (iLoop + 1))
+		If vImage Is Label Then
+			Dim lblImage As Label = vImage	
+			lblImage.SetBackgroundImage(ply.PlayerImage)
+		End If	
+		If iLoop = 0 Then
+			btnCurrPlayer.SetBackgroundImage(ply.PlayerImage)
+		End If
+	Next
+End Sub
+
+Sub ProcessChat(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	
+	ToastMessageShow(lstSettings.Get(1),False)
+End Sub
+
+Sub ProcessRowChange(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	Dim value As Int = lstSettings.Get(1)
+	sbRows.value = value
+	lblRows.Text = (value + 4)
+End Sub
+
+Sub ProcessColumnChange(msg As String)
+	Dim strF As StringFunctions
+	strF.Initialize
+	Dim lstSettings As List = strF.Split(msg,",")
+	Dim value As Int = lstSettings.Get(1)
+	sbColumns.value = value
+	lblColumns.Text = (value + 4)
 End Sub
 
 Sub ShowSplashScreen
@@ -198,10 +395,9 @@ Sub LastIconEnd_AnimationEnd
 	Activity.LoadLayout("layout1")
 	Activity.LoadLayout("winnerScreen")
 	pnlOuter.Left = -100%x
-	
-	inGame = True
 	InitGamePlay
 	SaveDefaults
+	inGame = True
 	AnimateGameScreens
 End Sub
 
@@ -319,22 +515,7 @@ Sub CreateColours()
 End Sub
 
 Sub LoadImages
-	Dim moreImages As Boolean = True
-	Dim imageLoop As Int = 1
-	
-	playerImages.Initialize
-	
-'	Do While moreImages = True
-'		If File.Exists(File.DirAssets,"monsterImage" & imageLoop & ".png") Then
-'			Dim bm As Bitmap
-'			bm.Initialize(File.DirAssets, "monsterImage" & imageLoop & ".png")
-'			playerImages.Add(bm)
-'			imageLoop = imageLoop + 1
-'		Else
-'			moreImages = False
-'		End If
-'	Loop
-	
+
 	checkBoxImages.Initialize
 	Dim bm As Bitmap 
 	bm.Initialize(File.DirAssets, "checkboxOn.png")
@@ -378,8 +559,24 @@ Sub CreatePlayers
 		If v Is Label Then
 			Dim lbl As Label = v
 			If playerVal.PlayerType = SPConstants.PLAYER_TYPE_HUMAN Then
-				lbl.Text = "Player " & iLoop
-			Else
+				If GameMode <> SPConstants.GAMETYPE_MODE_LOC  Then
+					If iLoop = 1 Then						
+						If IsMaster Then 
+							lbl.Text = "You"
+						Else
+							lbl.Text = "Them"
+						End If
+					Else
+						If IsMaster Then
+							lbl.Text = "Them"
+						Else
+							lbl.Text = "You"
+						End If
+					End If						
+				Else
+					lbl.Text = "Player " & iLoop
+				End If
+			Else 
 				lbl.Text = "Droid " & iLoop
 			End If			
 			If iLoop <= 11 Then
@@ -394,6 +591,7 @@ Sub CreatePlayers
 					Dim bm As Bitmap
 					bm.Initialize(File.DirAssets, "monsterImage" & (imageNum + 1) & ".png")
 					playerVal.PlayerImage = bm 'playerImages.Get(imageNum)
+					playerVal.PlayerImageNum = imageNum + 1
 					lblImage.SetBackgroundImage(playerVal.PlayerImage)
 					If playerVal.PlayerType = SPConstants.PLAYER_TYPE_DROID Then
 						lblImage.Text = "D"
@@ -415,15 +613,6 @@ Sub CreatePlayers
 End Sub
 
 Public Sub InitGamePlay
-	' This needs to change for bluetooth
-	GameMode = SPConstants.GAMETYPE_MODE_LOC
-	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
-		numberOfPlayers = 1
-		numberOfDroids = 0
-	Else
-		numberOfPlayers = spnPlayers.SelectedItem
-		numberOfDroids = spnDroids.SelectedItem
-	End If
 	gameHeight = sbRows.Value + 4
 	gameWidth = sbColumns.Value + 4
 	columnSpacing = panel1.Width / (gameWidth + 1)
@@ -433,8 +622,23 @@ Public Sub InitGamePlay
 	
 	CreateBoard
 	DrawBoard
-	CreatePlayers
+	CreatePlayers	
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC AND IsMaster Then
+		Dim ply As Player = players.Get(0)
+		Dim msg As String = SpConstants.GAME_MSG_SET_PLAYERS & "," & ply.PlayerImageNum
+		ply = players.Get(1)
+		SendMessage(msg & "," & ply.PlayerImageNum)
+	End If
 	SetDifficulty
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
+		numberOfPlayers = 2
+		numberOfDroids = 0
+		ShowChatWindow(True)
+	Else
+		numberOfPlayers = spnPlayers.SelectedItem
+		numberOfDroids = spnDroids.SelectedItem
+		ShowChatWindow(False)
+	End If	
 End Sub
 
 Public Sub SetDifficulty
@@ -458,10 +662,17 @@ End Sub
 Sub Panel1_Touch (Action As Int, X As Float, Y As Float)
 	Select Action
     	Case Activity.ACTION_UP
-			Log ("X,Y = " & X & "," & Y)
-			CalculateMove(X,Y)
-			panel1.Invalidate
-	End Select		
+		    If myTurn = True Then
+				myTurn = False
+				Log ("X,Y = " & X & "," & Y)
+				If CalculateMove(X,Y) <> True Then
+					myTurn = True
+				End If
+				panel1.Invalidate
+			Else
+				ToastMessageShow("Wait your turn...", False)
+			End If
+	End Select
 End Sub
 
 Sub CreateBoard
@@ -507,20 +718,34 @@ Sub DrawBoard
 	Next	
 End Sub
 
-Sub CalculateMove(xCoord As Int, yCoord As Int)
+Sub CalculateMove(xCoord As Int, yCoord As Int) As Boolean
 	'canv.DrawCircle(xCoord,yCoord,2dip,Colors.Red,True,1dip)
 	'panel1.Invalidate
 	Dim touchPoint As Point
 	Dim chosenSide As Int
 	touchPoint.Initialize(xCoord, yCoord)
 	Dim currentSquare As GameSquare = FindSelectedSquare(xCoord, yCoord)
-	Dim currPlayer As Player = players.Get(currentPlayer)
 	
 	chosenSide = currentSquare.CalculateClosestEdge(touchPoint)
 	Log(chosenSide)
 
 	' Don't go any futher as this side is already taken
-	If currentSquare.IsSideTaken(chosenSide) Then Return
+	If currentSquare.IsSideTaken(chosenSide) Then Return False
+	
+	Dim itemsClosed As Int = CalculateMove2(currentSquare, chosenSide)	
+
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
+		Dim move As String = SPConstants.GAME_MSG_PROCESS_TURN & "," & itemsClosed & "," & currentSquare.RowPos & "," & currentSquare.ColPos & "," & chosenSide				
+		SendMessage(move)	
+	Else
+		myTurn = True
+	End If
+	
+	Return True
+End Sub
+
+Sub CalculateMove2(currentSquare As GameSquare, chosenSide As Int) As Int
+	Dim currPlayer As Player = players.Get(currentPlayer)
 	
 	UpdateTurn(canv, currentSquare, chosenSide)
 	
@@ -545,18 +770,21 @@ Sub CalculateMove(xCoord As Int, yCoord As Int)
 			currPlayer = players.Get(currentPlayer)
 		Loop
 		btnCurrPlayer.Text = ""
-		btnCurrPlayer.SetBackgroundImage(currPlayer.PlayerImage)
+		btnCurrPlayer.SetBackgroundImage(currPlayer.PlayerImage)		
 	Else
 		currPlayer.Score = currPlayer.Score + numberClosed
 		If soundsOn Then sounds.Play(giggleSound,1,1,1,1,0)
 		If currPlayer.Score > 0 Then
 			UpdateScore(currPlayer)
 		End If
+		myTurn = True
 	End If
 	
 	panel1.Invalidate
 	
 	CheckAndDisplayWinnerScreen
+	
+	Return numberClosed
 	
 End Sub
 
@@ -674,8 +902,8 @@ Sub CheckAndDisplayWinnerScreen() As Boolean
 			End If
 		End If
 		For iLoop = 1 To players.Size
-			Dim p As Player = players.Get(iLoop - 1)
-			scoreText = scoreText & "Player " & iLoop & ": " & p.Score & " " 
+			Dim P As Player = players.Get(iLoop - 1)
+			scoreText = scoreText & "Player " & iLoop & ": " & P.Score & " " 
 		Next
 		lblScores.Text = scoreText
 		Return True
@@ -1287,19 +1515,39 @@ Sub UpdateDroidNumbers
 End Sub
 Sub btnContinue_Click
 	vibrate.vibrate(25)
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
+		Dim msg As String = SPConstants.GAME_MSG_START_GAME
+		SendMessage(msg)
+		If IsMaster Then
+			myTurn = True
+		End If
+	Else
+		myTurn = True
+		numberOfDroids = spnDroids.SelectedItem
+	End If
 	ReverseAnimate
 End Sub
+
 Sub sbRows_ValueChanged (Value As Int, UserChanged As Boolean)
 	gameHeight = Value + 4
 	lblRows.Text = "Rows : " & (Value + 4)
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC AND IsMaster Then
+		Dim msg As String = SPConstants.GAME_MSG_SET_ROWS & "," & Value
+		SendMessage(msg)
+	End If
 End Sub
 Sub sbColumns_ValueChanged (Value As Int, UserChanged As Boolean)
 	gameWidth = Value + 4
 	lblColumns.Text = "Columns : " & (Value	+ 4)
+	If GameMode <> SPConstants.GAMETYPE_MODE_LOC AND IsMaster Then
+		Dim msg As String = SPConstants.GAME_MSG_SET_COLUMNS & "," & Value
+		SendMessage(msg)
+	End If
 End Sub
 Sub Activity_KeyPress (KeyCode As Int) As Boolean 'Return True to consume the event
 	If KeyCode = KeyCodes.KEYCODE_BACK Then
 		If inGame Then
+			inGame = False		
 			If pnlOuter.Left = 0dip Then
 				pnlOuter.Left = -100%x
 				DisplayFrontScreen
@@ -1310,16 +1558,33 @@ Sub Activity_KeyPress (KeyCode As Int) As Boolean 'Return True to consume the ev
 			      "W A R N I N G", "Yes", "", "No", Null)
 			    If Answ = DialogResponse.NEGATIVE Then
 			      Return True
-				Else		
-					DisplayFrontScreen
-					AnimateCharacters					
+				Else
+					If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
+						SendMessage(SPConstants.GAME_MSG_CLOSE_GAME)
+					End If
+					CloseGame
 					Return True
 				End If			
 			End If
+		Else
+			SendMessage(SPConstants.GAME_MSG_CLOSE_START)
 		End If
 	End If
 	
 	Return False
+End Sub
+
+Sub CloseGame()
+	If pnlOuter.IsInitialized Then
+		pnlOuter.Left = -100%x
+		DisplayFrontScreen
+		AnimateCharacters
+	End If
+End Sub
+
+Sub CloseStartScreen()
+	ToastMessageShow("The other player has return to the start screen - connection is closed", False)
+	Activity.Finish
 End Sub
 
 Sub RestoreDefaults() As Boolean
@@ -1328,6 +1593,9 @@ Sub RestoreDefaults() As Boolean
 		If defaultsMap.IsInitialized Then
 			Dim iLoop As Int
 			Dim def_players As Int = defaultsMap.Get("players")
+			If GameMode = SPConstants.GAMETYPE_MODE_BT Then
+				def_players = 0
+			End If
 			For iLoop = 0 To spnPlayers.Size - 1
 				If spnPlayers.GetItem(iLoop) = def_players Then
 					spnPlayers.SelectedIndex = iLoop
@@ -1336,6 +1604,9 @@ Sub RestoreDefaults() As Boolean
 			Next
 			UpdateDroidNumbers
 			Dim def_droids As Int = defaultsMap.Get("droids")
+			If GameMode = SPConstants.GAMETYPE_MODE_BT Then
+				def_droids = 0
+			End If			
 			For iLoop = 0 To spnDroids.Size - 1
 				If spnDroids.GetItem(iLoop) = def_droids Then
 					spnDroids.SelectedIndex = iLoop
@@ -1367,8 +1638,6 @@ Sub RestoreDefaults() As Boolean
 		End If
 	End If
 	
-	' This needs to change when doing a release
-	GameMode = SPConstants.GAMETYPE_MODE_LOC 
 	If GameMode <> SPConstants.GAMETYPE_MODE_LOC Then
 		spnPlayers.Enabled = False
 		spnDroids.Enabled = False
@@ -1452,9 +1721,8 @@ Sub btnCurrPlayer_Click
 End Sub
 
 Sub btnOk_Click
-	pnlOuter.Left = -100%x
-	DisplayFrontScreen
-	AnimateCharacters
+	SendMessage(SPConstants.GAME_MSG_CLOSE_GAME)
+	CloseGame
 End Sub
 
 Sub lblDebugDisplay_Click
@@ -1480,5 +1748,7 @@ Sub chkSounds_Click
 	End If
 End Sub
 
-
-
+Sub txtMessage_EnterPressed
+	SendMessage(SPConstants.GAME_MSG_PROCESS_CHAT & "," & txtMessage.Text)
+	txtMessage.Text = ""
+End Sub
