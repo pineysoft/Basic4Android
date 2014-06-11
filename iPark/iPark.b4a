@@ -4,12 +4,17 @@ NumberOfModules=0
 Build1=Default,b4a.example
 DoNotOverwriteManifest=False
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.basic4ppc.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="4" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~
-NumberOfFiles=0
-NumberOfLibraries=1
+NumberOfFiles=4
+File1=BlueButton.png
+File2=iPark.png
+File3=LicQld.png
+File4=Screen1.bal
+NumberOfLibraries=2
 Library1=core
+Library2=animationplus
 @EndOfDesignText@
 #Region  Project Attributes 
-	#ApplicationLabel: B4A Example
+	#ApplicationLabel: iPark
 	#VersionCode: 1
 	#VersionName: 
 	'SupportedOrientations possible values: unspecified, landscape or portrait.
@@ -19,25 +24,36 @@ Library1=core
 
 #Region  Activity Attributes 
 	#FullScreen: False
-	#IncludeTitle: True
+	#IncludeTitle: False
 #End Region
 
 Sub Process_Globals
 	'These global variables will be declared once when the application starts.
 	'These variables can be accessed from all modules.
-
+	Dim splashTimer As Timer
 End Sub
 
 Sub Globals
 	'These global variables will be redeclared each time the activity is created.
 	'These variables can only be accessed from this module.
 
+	Private pnlSplash As Panel
+	Dim splashAnim As AnimationPlus
+	Private lblLastUsed As Label
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
 	'Do not forget to load the layout file created with the visual designer. For example:
-	'Activity.LoadLayout("Layout1")
-
+	Activity.LoadLayout("Screen1")
+	lblLastUsed.Text = "123 TVL" & CRLF & "5:30 (4876)"
+	If FirstTime Then
+		pnlSplash.Left = 0dip
+		splashTimer.Initialize("splashTimer",2000)
+		splashTimer.Enabled = True
+	Else
+		pnlSplash.Left = 100%x
+	End If
+	
 End Sub
 
 Sub Activity_Resume
@@ -48,4 +64,14 @@ Sub Activity_Pause (UserClosed As Boolean)
 
 End Sub
 
+Sub splashTimer_Tick
+	splashTimer.Enabled = False
+	splashAnim.InitializeAlpha("SplashAnim",1,0)
+	splashAnim.Duration = 1000
+	splashAnim.PersistAfter = True
+	splashAnim.Start(pnlSplash)
+End Sub
 
+Sub splashAnim_AnimationEnd
+	pnlSplash.Left = 100%x
+End Sub
